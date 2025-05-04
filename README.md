@@ -1,54 +1,110 @@
-# React + TypeScript + Vite
+# UPSC PYQs Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based application for managing and studying UPSC (Union Public Service Commission) Previous Year Questions. This application helps aspirants organize and study questions effectively.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Browse UPSC previous year questions
+- Add your own questions and explanations
+- Search and filter questions
+- Modern, responsive UI built with React and Tailwind CSS
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+1. Clone the repository:
+```bash
+git clone https://github.com/mous9270/upsc.git
+cd upsc
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+2. Install dependencies:
+```bash
+npm install
 ```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173`
+
+## Data Management
+
+### UPSC PYQs CSV File
+
+The application uses a CSV file (`upscpyqs.csv`) located in the `public` directory to store questions and answers. You can:
+
+1. Find the file at: `public/upscpyqs.csv`
+2. Update it with your own questions following the existing format
+3. The CSV should contain columns for:
+   - Question text
+   - Answer
+   - Explanation
+   - Year
+   - Subject
+   - Other relevant metadata
+
+## Contributing
+
+We welcome contributions to improve this project! Here's how you can help:
+
+1. **Report Issues**: Found a bug or have a suggestion? Open an issue!
+2. **Submit Corrections**: If you find any errors in questions or explanations, please submit a correction.
+3. **Add New Features**: Have an idea for a new feature? We'd love to hear about it!
+4. **Improve Documentation**: Help make the documentation clearer and more comprehensive.
+
+### Contributor License Agreement (CLA)
+
+By contributing to this project, you confirm that:
+
+"I confirm this explanation is original or based only on public knowledge."
+
+This helps ensure that all contributions are properly licensed and don't infringe on any copyrights.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a new branch for your feature/fix
+3. Make your changes
+4. Submit a pull request
+
+## Development
+
+This project is built with:
+- React + TypeScript
+- Vite for fast development and building
+- Tailwind CSS for styling
+- PapaParse for CSV handling
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+- Email: srinivas@upscpreviousquestiones.com
+- Telegram: [UPSC Prelims PYQS](https://t.me/UPSCPrelimsPYQS)
+- Support: alamanikanta1110@oksbi
+
+## Support the Project
+
+If you find this project helpful, please consider supporting its development:
+
+1. Star the repository
+2. Share with other UPSC aspirants
+3. Contribute to the project
+4. Report bugs and suggest improvements
+
+## Acknowledgments
+
+- Thanks to all contributors who have helped improve this project
+- Special thanks to the UPSC community for their valuable feedback
+- Inspired by the need for better UPSC preparation tools
