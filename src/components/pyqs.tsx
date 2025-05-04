@@ -66,6 +66,11 @@ const transformHeader = (header: string): string => {
     }
 };
 
+// Helper function to replace \n with actual line breaks
+const formatText = (text: string | null): string => {
+    if (!text) return '';
+    return text.replace(/\\n/g, '\n');
+};
 
 const Pyqs: React.FC = () => {
     // --- State Variables ---
@@ -530,7 +535,7 @@ const Pyqs: React.FC = () => {
                     {currentQuestion.passage && (
                         <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-700">
                             <p className="font-semibold mb-1">Passage:</p>
-                            <p className="whitespace-pre-line">{currentQuestion.passage}</p>
+                            <p className="whitespace-pre-line">{formatText(currentQuestion.passage)}</p>
                         </div>
                     )}
 
@@ -558,7 +563,7 @@ const Pyqs: React.FC = () => {
 
 
                     {/* Question Text */}
-                    <p className="mb-5 text-lg text-gray-900 whitespace-pre-line">{currentQuestion.question ?? 'Question text missing'}</p>
+                    <p className="mb-5 text-lg text-gray-900 whitespace-pre-line">{formatText(currentQuestion.question) ?? 'Question text missing'}</p>
 
 
                     {/* Options */}
@@ -566,7 +571,7 @@ const Pyqs: React.FC = () => {
                         {(['A', 'B', 'C', 'D'] as const).map(optLetter => {
                             // Map 'A' -> 'option_a', 'B' -> 'option_b', etc.
                             const optionKey = `option_${optLetter.toLowerCase()}` as keyof Question;
-                            const optionText = currentQuestion[optionKey] != null ? String(currentQuestion[optionKey]) : `Option ${optLetter} missing`;
+                            const optionText = currentQuestion[optionKey] != null ? formatText(String(currentQuestion[optionKey])) : `Option ${optLetter} missing`;
                             const isSelected = selectedOption === optLetter;
                             // Ensure correct_option comparison is robust
                             const isCorrect = currentQuestion.correct_option?.toUpperCase() === optLetter;
@@ -600,7 +605,7 @@ const Pyqs: React.FC = () => {
                         currentQuestion.explanation ? (
                             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
                                 <h3 className="font-semibold text-blue-800 mb-2">Explanation:</h3>
-                                <p className="text-sm text-gray-700 whitespace-pre-line">{currentQuestion.explanation}</p>
+                                <p className="text-sm text-gray-700 whitespace-pre-line">{formatText(currentQuestion.explanation)}</p>
                             </div>
                         ) : (
                             <p className="mt-4 text-sm text-gray-500 italic">No explanation available.</p>
