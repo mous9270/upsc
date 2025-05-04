@@ -27,6 +27,7 @@ interface Filters {
     subject: string;
     topic: string;
     year: string;
+    id: string; // Add ID to filters
 }
 
 // Helper function to shuffle an array (Fisher-Yates algorithm)
@@ -72,12 +73,22 @@ const formatText = (text: string | null): string => {
     return text.replace(/\\n/g, '\n');
 };
 
+// Helper function to format image URLs
+const formatImageUrl = (url: string | null): string | null => {
+    if (!url) return null;
+    // If the URL is just a filename (like "1.png"), prepend the public path
+    if (!url.startsWith('http') && !url.startsWith('/')) {
+        return `/${url}`;
+    }
+    return url;
+};
+
 const Pyqs: React.FC = () => {
     // --- State Variables ---
     const [allQuestions, setAllQuestions] = useState<Question[]>([]);
     const [isLoadingCsv, setIsLoadingCsv] = useState<boolean>(true);
     const [csvError, setCsvError] = useState<string | null>(null);
-    const [filters, setFilters] = useState<Filters>({ paper: '', subject: '', topic: '', year: '' });
+    const [filters, setFilters] = useState<Filters>({ paper: '', subject: '', topic: '', year: '', id: '' });
     const [availablePapers, setAvailablePapers] = useState<string[]>([]);
     const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
     const [availableTopics, setAvailableTopics] = useState<string[]>([]);
@@ -288,8 +299,6 @@ const Pyqs: React.FC = () => {
              return;
         }
 
-        // console.log("Applying filters/search. Filters:", filters, `Search: '${debouncedSearchTerm}', Random: ${isRandom}`); // Keep for debugging if needed
-
         let filtered = [...allQuestions];
 
         // Apply filters (ensure properties exist before filtering)
@@ -304,6 +313,12 @@ const Pyqs: React.FC = () => {
         }
         if (filters.year) {
             filtered = filtered.filter(q => q.year === filters.year);
+        }
+        if (filters.id) {
+            const searchId = parseInt(filters.id, 10);
+            if (!isNaN(searchId)) {
+                filtered = filtered.filter(q => q.id === searchId);
+            }
         }
 
         // Apply search term (case-insensitive, check for nulls)
@@ -324,10 +339,7 @@ const Pyqs: React.FC = () => {
             filtered = shuffleArray(filtered);
         }
 
-        // console.log("Filtered Questions Count:", filtered.length); // Keep for debugging if needed
         setDisplayedQuestions(filtered);
-
-        // Reset navigation only when filters/search/random change results
         setCurrentIndex(0);
         setSelectedOption(null);
         setSubmittedIndices(new Set());
@@ -342,7 +354,7 @@ const Pyqs: React.FC = () => {
 
 
     // --- Event Handlers ---
-    const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
         const { name, value } = e.target;
         setFilters(prevFilters => {
             const newFilters = { ...prevFilters, [name]: value };
@@ -434,7 +446,20 @@ const Pyqs: React.FC = () => {
                      <p className="text-center text-gray-500">No question data found. Please check the `upscpyqs.csv` file.</p>
                 )}
                 {!isLoadingCsv && !csvError && allQuestions.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        {/* ID Search */}
+                        <div>
+                            <label htmlFor="id" className="block text-sm font-medium text-gray-600 mb-1">Question ID</label>
+                            <input
+                                type="number"
+                                id="id"
+                                name="id"
+                                value={filters.id}
+                                onChange={handleFilterChange}
+                                placeholder="Search by ID"
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                            />
+                        </div>
                         {/* Paper */}
                         <div>
                             <label htmlFor="paper" className="block text-sm font-medium text-gray-600 mb-1">Paper</label>
@@ -543,10 +568,9 @@ const Pyqs: React.FC = () => {
                     {currentQuestion.imageUrl && (
                         <div className="mb-4 text-center">
                            <img
-                                src={currentQuestion.imageUrl}
+                                src={currentQuestion.imageUrl.startsWith('http') ? currentQuestion.imageUrl : `/${currentQuestion.imageUrl}`}
                                 alt="Question related image"
                                 className="max-w-full h-auto inline-block rounded border border-gray-200"
-                                // Add error handling for broken image links
                                 onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.onerror = null; // Prevent infinite loop
