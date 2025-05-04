@@ -668,7 +668,9 @@ const Pyqs: React.FC = () => {
                 <div className={`transition-all duration-300 ease-in-out ${isFooterOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                     <div className="p-4 text-sm text-gray-500">
                         <p className="mb-3 max-w-2xl">
-                            Explanations on this platform are contributed by users for educational purposes. If you believe any content infringes copyright, contact us, and we'll remove it promptly.
+                        Note: Current explanations have been removed as they were taken from random sources without carefully considering copyright. As the community is growing, I want to be more careful. With the help of others, I will work to provide more authentic explanations and make the website better. If you’d like to check the GitHub link, it’s provided below — contributions are welcome. Explanations on this platform are contributed by users for educational purposes. If you believe any content infringes copyright, please contact us and we will remove it promptly.
+
+
                         </p>
                         <div className="mb-3 space-y-1">
                             <p className="text-gray-600 font-medium">Contact us:</p>
