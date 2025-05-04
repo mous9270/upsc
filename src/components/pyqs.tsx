@@ -101,6 +101,7 @@ const Pyqs: React.FC = () => {
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [submittedIndices, setSubmittedIndices] = useState<Set<number>>(new Set());
     const [jumpToInput, setJumpToInput] = useState<string>('');
+    const [isFiltersOpen, setIsFiltersOpen] = useState<boolean>(false);
 
     // --- Debounce Search Term ---
     useEffect(() => {
@@ -434,103 +435,118 @@ const Pyqs: React.FC = () => {
 
     // --- Render Logic ---
     return (
-        <div className="container mx-auto p-4 font-sans">
-            <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">UPSC PYQs Practice</h1>
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 font-sans">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">UPSC PYQs Practice</h1>
 
-             {/* Filter Section */}
-            <div className="mb-8 p-4 border rounded-lg shadow-md bg-white">
-                <h2 className="text-xl font-semibold mb-4 text-gray-700">Select Filters</h2>
-                {isLoadingCsv && <p className="text-center text-blue-600">Loading question data...</p>}
-                {!isLoadingCsv && csvError && <p className="text-center text-red-600 bg-red-100 p-3 rounded border border-red-300">Error: {csvError}</p>}
-                {!isLoadingCsv && !csvError && allQuestions.length === 0 && (
-                     <p className="text-center text-gray-500">No question data found. Please check the `upscpyqs.csv` file.</p>
-                )}
-                {!isLoadingCsv && !csvError && allQuestions.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* Paper */}
-                        <div>
-                            <label htmlFor="paper" className="block text-sm font-medium text-gray-600 mb-1">Paper</label>
-                            <select id="paper" name="paper" value={filters.paper} onChange={handleFilterChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm">
-                                {renderSelectOptions(availablePapers, 'All Papers')}
-                            </select>
-                        </div>
-                        {/* Subject */}
-                        <div>
-                            <label htmlFor="subject" className="block text-sm font-medium text-gray-600 mb-1">Subject</label>
-                            <select
-                                id="subject" name="subject" value={filters.subject} onChange={handleFilterChange}
-                                disabled={availableSubjects.length === 0}
-                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm disabled:bg-gray-100"
-                            >
-                                {renderSelectOptions(availableSubjects, filters.paper ? 'All Subjects for Paper' : 'All Subjects')}
-                            </select>
-                        </div>
-                        {/* Topic */}
-                        <div>
-                             <label htmlFor="topic" className="block text-sm font-medium text-gray-600 mb-1">Topic</label>
-                            <select
-                                id="topic" name="topic" value={filters.topic} onChange={handleFilterChange}
-                                disabled={availableTopics.length === 0}
-                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm disabled:bg-gray-100"
-                            >
-                                {renderSelectOptions(availableTopics, filters.subject ? 'All Topics for Subject' : 'All Topics')}
-                            </select>
-                        </div>
-                         {/* Year */}
-                        <div>
-                            <label htmlFor="year" className="block text-sm font-medium text-gray-600 mb-1">Year</label>
-                            <select id="year" name="year" value={filters.year} onChange={handleFilterChange} className="w-full p-2 border border-gray-300 rounded-md shadow-sm">
-                                {renderSelectOptions(availableYears, 'All Years')}
-                            </select>
-                        </div>
+            {/* Filter Section - Now Collapsible */}
+            <div className="mb-4 sm:mb-8 border rounded-lg shadow-md bg-white">
+                <button
+                    onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                    className="w-full p-3 sm:p-4 flex justify-between items-center text-left"
+                >
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-700">Select Filters</h2>
+                    <span className="text-gray-500">
+                        {isFiltersOpen ? '▼' : '▶'}
+                    </span>
+                </button>
+
+                <div className={`transition-all duration-300 ease-in-out ${isFiltersOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                    <div className="p-3 sm:p-4 border-t">
+                        {isLoadingCsv && <p className="text-center text-blue-600">Loading question data...</p>}
+                        {!isLoadingCsv && csvError && <p className="text-center text-red-600 bg-red-100 p-2 sm:p-3 rounded border border-red-300">Error: {csvError}</p>}
+                        {!isLoadingCsv && !csvError && allQuestions.length === 0 && (
+                            <p className="text-center text-gray-500">No question data found. Please check the `upscpyqs.csv` file.</p>
+                        )}
+                        {!isLoadingCsv && !csvError && allQuestions.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                                {/* Paper */}
+                                <div>
+                                    <label htmlFor="paper" className="block text-sm font-medium text-gray-600 mb-1">Paper</label>
+                                    <select id="paper" name="paper" value={filters.paper} onChange={handleFilterChange} 
+                                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm">
+                                        {renderSelectOptions(availablePapers, 'All Papers')}
+                                    </select>
+                                </div>
+                                {/* Subject */}
+                                <div>
+                                    <label htmlFor="subject" className="block text-sm font-medium text-gray-600 mb-1">Subject</label>
+                                    <select
+                                        id="subject" name="subject" value={filters.subject} onChange={handleFilterChange}
+                                        disabled={availableSubjects.length === 0}
+                                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm disabled:bg-gray-100"
+                                    >
+                                        {renderSelectOptions(availableSubjects, filters.paper ? 'All Subjects for Paper' : 'All Subjects')}
+                                    </select>
+                                </div>
+                                {/* Topic */}
+                                <div>
+                                    <label htmlFor="topic" className="block text-sm font-medium text-gray-600 mb-1">Topic</label>
+                                    <select
+                                        id="topic" name="topic" value={filters.topic} onChange={handleFilterChange}
+                                        disabled={availableTopics.length === 0}
+                                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm disabled:bg-gray-100"
+                                    >
+                                        {renderSelectOptions(availableTopics, filters.subject ? 'All Topics for Subject' : 'All Topics')}
+                                    </select>
+                                </div>
+                                {/* Year */}
+                                <div>
+                                    <label htmlFor="year" className="block text-sm font-medium text-gray-600 mb-1">Year</label>
+                                    <select id="year" name="year" value={filters.year} onChange={handleFilterChange} 
+                                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm">
+                                        {renderSelectOptions(availableYears, 'All Years')}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
 
-             {/* Search and Random Section */}
-            <div className={`mb-6 p-4 border rounded-lg shadow-md bg-white flex flex-col sm:flex-row justify-between items-center gap-4 ${isLoadingCsv || csvError ? 'opacity-50 pointer-events-none' : ''}`}>
+            {/* Search and Random Section */}
+            <div className={`mb-4 sm:mb-6 p-3 sm:p-4 border rounded-lg shadow-md bg-white flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 ${isLoadingCsv || csvError ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="w-full sm:w-1/2 lg:w-2/3">
                     <label htmlFor="search" className="sr-only">Search Questions</label>
                     <input
                         type="text" id="search" placeholder="Search..." value={searchTerm} onChange={handleSearchChange}
-                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm"
                         disabled={isLoadingCsv || !!csvError || allQuestions.length === 0}
                     />
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center w-full sm:w-auto">
                     <input
                         type="checkbox" id="random" checked={isRandom} onChange={handleRandomToggle}
                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2"
-                         disabled={isLoadingCsv || !!csvError || allQuestions.length === 0}
+                        disabled={isLoadingCsv || !!csvError || allQuestions.length === 0}
                     />
-                    <label htmlFor="random" className="text-sm font-medium text-gray-700">Random Order</label>
+                    <label htmlFor="random" className="text-sm sm:text-base font-medium text-gray-700">Random Order</label>
                 </div>
             </div>
 
             {/* No Matching Questions Message */}
-             {!isLoadingCsv && !csvError && allQuestions.length > 0 && displayedQuestions.length === 0 && (
-                 <p className="text-center text-lg text-gray-500 my-8">No questions found matching your criteria.</p>
-             )}
+            {!isLoadingCsv && !csvError && allQuestions.length > 0 && displayedQuestions.length === 0 && (
+                <p className="text-center text-base sm:text-lg text-gray-500 my-6 sm:my-8">No questions found matching your criteria.</p>
+            )}
 
             {/* Single Question Display Area */}
             {!isLoadingCsv && !csvError && currentQuestion && (
-                <div className="my-8 p-6 border rounded-lg shadow-lg bg-white">
+                <div className="my-4 sm:my-8 p-3 sm:p-6 border rounded-lg shadow-lg bg-white">
                     {/* Jump To Section */}
-                     <div className="mb-4 flex items-center justify-end gap-2 text-sm">
-                         <label htmlFor="jumpTo">Go to:</label>
-                         <input
+                    <div className="mb-3 sm:mb-4 flex flex-wrap items-center justify-end gap-2 text-xs sm:text-sm">
+                        <label htmlFor="jumpTo">Go to:</label>
+                        <input
                             type="number" id="jumpTo" min="1" max={totalFilteredQuestions} value={jumpToInput}
                             onChange={handleJumpInputChange}
                             onKeyDown={(e) => e.key === 'Enter' && handleJumpTo()}
-                            className="w-16 p-1 border border-gray-300 rounded-md text-center"
+                            className="w-14 sm:w-16 p-1 border border-gray-300 rounded-md text-center"
                             disabled={totalFilteredQuestions <= 1}
                         />
                         <button
                             onClick={handleJumpTo}
-                            className="px-3 py-1 border border-gray-300 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-2 sm:px-3 py-1 border border-gray-300 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={totalFilteredQuestions <= 1 || !jumpToInput}
                         > Go </button>
-                        <span className="mx-2">|</span>
+                        <span className="mx-1 sm:mx-2">|</span>
                         <label htmlFor="id">Search ID:</label>
                         <input
                             type="number"
@@ -539,13 +555,13 @@ const Pyqs: React.FC = () => {
                             value={filters.id}
                             onChange={handleFilterChange}
                             placeholder="ID"
-                            className="w-16 p-1 border border-gray-300 rounded-md text-center"
+                            className="w-14 sm:w-16 p-1 border border-gray-300 rounded-md text-center"
                         />
                     </div>
 
                     {/* Question Header */}
-                    <div className="mb-4 pb-2 border-b border-gray-200 flex justify-between items-baseline">
-                        <h2 className="text-xl font-semibold text-gray-800">
+                    <div className="mb-3 sm:mb-4 pb-2 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1">
+                        <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
                             Question {currentIndex + 1} of {totalFilteredQuestions}
                         </h2>
                         <span className="text-xs text-gray-500">
@@ -555,7 +571,7 @@ const Pyqs: React.FC = () => {
 
                     {/* Passage */}
                     {currentQuestion.passage && (
-                        <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-700">
+                        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gray-50 border border-gray-200 rounded text-xs sm:text-sm text-gray-700">
                             <p className="font-semibold mb-1">Passage:</p>
                             <p className="whitespace-pre-line">{formatText(currentQuestion.passage)}</p>
                         </div>
@@ -563,40 +579,37 @@ const Pyqs: React.FC = () => {
 
                     {/* Image (Optional Display) */}
                     {currentQuestion.imageUrl && (
-                        <div className="mb-4 text-center">
-                           <img
+                        <div className="mb-3 sm:mb-4 text-center">
+                            <img
                                 src={`/${currentQuestion.imageUrl}`}
                                 alt="Question related image"
                                 className="max-w-full h-auto inline-block rounded border border-gray-200"
                                 onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.onerror = null; // Prevent infinite loop
-                                    target.style.display = 'none'; // Hide broken image icon
-                                    // Optionally display a placeholder or message
+                                    target.onerror = null;
+                                    target.style.display = 'none';
                                     const errorMsg = document.createElement('p');
                                     errorMsg.textContent = 'Image failed to load.';
-                                    errorMsg.className = 'text-red-500 text-sm italic';
+                                    errorMsg.className = 'text-red-500 text-xs sm:text-sm italic';
                                     target.parentNode?.insertBefore(errorMsg, target.nextSibling);
                                 }}
-                           />
+                            />
                         </div>
                     )}
 
                     {/* Question Text */}
-                    <p className="mb-5 text-lg text-gray-900 whitespace-pre-line">{formatText(currentQuestion.question) ?? 'Question text missing'}</p>
+                    <p className="mb-4 sm:mb-5 text-base sm:text-lg text-gray-900 whitespace-pre-line">{formatText(currentQuestion.question) ?? 'Question text missing'}</p>
 
                     {/* Options */}
-                    <div className="space-y-3 mb-6">
+                    <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                         {(['A', 'B', 'C', 'D'] as const).map(optLetter => {
-                            // Map 'A' -> 'option_a', 'B' -> 'option_b', etc.
                             const optionKey = `option_${optLetter.toLowerCase()}` as keyof Question;
                             const optionText = currentQuestion[optionKey] != null ? formatText(String(currentQuestion[optionKey])) : `Option ${optLetter} missing`;
                             const isSelected = selectedOption === optLetter;
-                            // Ensure correct_option comparison is robust
                             const isCorrect = currentQuestion.correct_option?.toUpperCase() === optLetter;
 
-                            let optionClasses = "p-3 rounded border transition-colors flex items-start";
-                             if (isCurrentSubmitted) {
+                            let optionClasses = "p-2 sm:p-3 rounded border transition-colors flex items-start text-sm sm:text-base";
+                            if (isCurrentSubmitted) {
                                 optionClasses += " cursor-not-allowed";
                                 if (isCorrect) optionClasses += " bg-green-100 border-green-400 text-green-800";
                                 else if (isSelected) optionClasses += " bg-red-100 border-red-400 text-red-800";
@@ -610,10 +623,10 @@ const Pyqs: React.FC = () => {
 
                             return (
                                 <div key={optLetter} className={optionClasses} onClick={() => handleOptionSelect(optLetter)}>
-                                    <span className={`font-bold mr-3`}>{optLetter})</span>
-                                    <span className={`whitespace-pre-line flex-1`}>{optionText}</span>
-                                    {isCurrentSubmitted && isCorrect && <span className="ml-auto pl-2 font-bold text-green-600">✓ Correct</span>}
-                                    {isCurrentSubmitted && isSelected && !isCorrect && <span className="ml-auto pl-2 font-bold text-red-600">✗ Your Answer</span>}
+                                    <span className="font-bold mr-2 sm:mr-3">{optLetter})</span>
+                                    <span className="whitespace-pre-line flex-1">{optionText}</span>
+                                    {isCurrentSubmitted && isCorrect && <span className="ml-auto pl-2 font-bold text-green-600">✓</span>}
+                                    {isCurrentSubmitted && isSelected && !isCorrect && <span className="ml-auto pl-2 font-bold text-red-600">✗</span>}
                                 </div>
                             );
                         })}
@@ -622,32 +635,32 @@ const Pyqs: React.FC = () => {
                     {/* Explanation */}
                     {isCurrentSubmitted && (
                         currentQuestion.explanation ? (
-                            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
-                                <h3 className="font-semibold text-blue-800 mb-2">Explanation:</h3>
-                                <p className="text-sm text-gray-700 whitespace-pre-line">{formatText(currentQuestion.explanation)}</p>
+                            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded">
+                                <h3 className="font-semibold text-blue-800 mb-1 sm:mb-2 text-sm sm:text-base">Explanation:</h3>
+                                <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-line">{formatText(currentQuestion.explanation)}</p>
                             </div>
                         ) : (
-                            <p className="mt-4 text-sm text-gray-500 italic">No explanation available.</p>
+                            <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500 italic">No explanation available.</p>
                         )
-                     )}
+                    )}
 
                     {/* Navigation Buttons */}
-                    <div className="mt-8 pt-4 border-t border-gray-200 flex justify-between items-center">
+                    <div className="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
                         <button
                             onClick={handlePrevious} disabled={currentIndex === 0}
-                            className="px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full sm:w-auto px-4 sm:px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                         > &larr; Previous </button>
                         <button
                             onClick={handleSubmit} disabled={selectedOption === null || isCurrentSubmitted}
-                            className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-indigo-400"
+                            className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-indigo-400"
                         > {isCurrentSubmitted ? 'Answer Submitted' : 'Submit Answer'} </button>
-                         <button
+                        <button
                             onClick={handleNext} disabled={currentIndex === totalFilteredQuestions - 1}
-                             className="px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                         > Next &rarr; </button>
+                            className="w-full sm:w-auto px-4 sm:px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        > Next &rarr; </button>
                     </div>
                 </div>
-             )}
+            )}
         </div>
     );
 };
