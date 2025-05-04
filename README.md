@@ -84,6 +84,15 @@ This project is built with:
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 
+## Support the Project
+
+If you find this project helpful, please consider supporting its development:
+
+1. Star the repository
+2. Share with other UPSC aspirants
+3. Contribute to the project
+4. Report bugs and suggest improvements
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -94,14 +103,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Telegram: [UPSC Prelims PYQS](https://t.me/UPSCPrelimsPYQS)
 - Support: alamanikanta1110@oksbi
 
-## Support the Project
-
-If you find this project helpful, please consider supporting its development:
-
-1. Star the repository
-2. Share with other UPSC aspirants
-3. Contribute to the project
-4. Report bugs and suggest improvements
 
 ## Acknowledgments
 
