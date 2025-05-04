@@ -61,7 +61,7 @@ const transformHeader = (header: string): string => {
         case 'Option D': return 'option_d';
         case 'Correct Answer': return 'correct_option';
         case 'Explanation': return 'explanation';
-        case 'Image Url': return 'imageUrl';
+        case 'Image': return 'imageUrl';
         // Keep other headers as they are (lowercase) or handle them if needed
         default: return trimmedHeader.toLowerCase().replace(/\s+/g, '_'); // Basic fallback
     }
@@ -569,6 +569,7 @@ const Pyqs: React.FC = () => {
                                 alt="Question related image"
                                 className="max-w-full h-auto inline-block rounded border border-gray-200"
                                 onError={(e) => {
+                                    console.log('Image failed to load:', e);
                                     const target = e.target as HTMLImageElement;
                                     target.onerror = null; // Prevent infinite loop
                                     target.style.display = 'none'; // Hide broken image icon
