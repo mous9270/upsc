@@ -102,6 +102,7 @@ const Pyqs: React.FC = () => {
     const [submittedIndices, setSubmittedIndices] = useState<Set<number>>(new Set());
     const [jumpToInput, setJumpToInput] = useState<string>('');
     const [isFiltersOpen, setIsFiltersOpen] = useState<boolean>(false);
+    const [isFooterOpen, setIsFooterOpen] = useState<boolean>(false);
 
     // --- Debounce Search Term ---
     useEffect(() => {
@@ -661,6 +662,54 @@ const Pyqs: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Footer Section */}
+            <div className="mt-8 border-t border-gray-200">
+                <button
+                    onClick={() => setIsFooterOpen(!isFooterOpen)}
+                    className="w-full p-4 flex justify-between items-center text-left text-sm text-gray-600 hover:bg-gray-50"
+                >
+                    <span className="font-medium">About & Contact</span>
+                    <span className="text-gray-500">
+                        {isFooterOpen ? '▼' : '▶'}
+                    </span>
+                </button>
+
+                <div className={`transition-all duration-300 ease-in-out ${isFooterOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                    <div className="p-4 text-sm text-gray-500">
+                        <p className="mb-3 max-w-2xl">
+                            Explanations on this platform are contributed by users for educational purposes. If you believe any content infringes copyright, contact us, and we'll remove it promptly.
+                        </p>
+                        <div className="mb-3 space-y-1">
+                            <p className="text-gray-600 font-medium">Contact us:</p>
+                            <p>Email: srinivas@upscpreviousquestiones.com</p>
+                            <p>
+                                Telegram:{' '}
+                                <a 
+                                    href="https://t.me/+b-yWUaj2okhmN2Q1" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                                >
+                                    UPSC Prelims PYQS
+                                </a>
+                            </p>
+                            <p>Support: alamanikanta1110@oksbi</p>
+                        </div>
+                        <p className="text-gray-600">
+                            Want to contribute? Help improve this platform by contributing on{' '}
+                            <a 
+                                href="https://github.com/mous9270/upsc" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                            >
+                                GitHub
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
