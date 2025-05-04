@@ -446,20 +446,7 @@ const Pyqs: React.FC = () => {
                      <p className="text-center text-gray-500">No question data found. Please check the `upscpyqs.csv` file.</p>
                 )}
                 {!isLoadingCsv && !csvError && allQuestions.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        {/* ID Search */}
-                        <div>
-                            <label htmlFor="id" className="block text-sm font-medium text-gray-600 mb-1">Question ID</label>
-                            <input
-                                type="number"
-                                id="id"
-                                name="id"
-                                value={filters.id}
-                                onChange={handleFilterChange}
-                                placeholder="Search by ID"
-                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                            />
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Paper */}
                         <div>
                             <label htmlFor="paper" className="block text-sm font-medium text-gray-600 mb-1">Paper</label>
@@ -543,6 +530,17 @@ const Pyqs: React.FC = () => {
                             className="px-3 py-1 border border-gray-300 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={totalFilteredQuestions <= 1 || !jumpToInput}
                         > Go </button>
+                        <span className="mx-2">|</span>
+                        <label htmlFor="id">Search ID:</label>
+                        <input
+                            type="number"
+                            id="id"
+                            name="id"
+                            value={filters.id}
+                            onChange={handleFilterChange}
+                            placeholder="ID"
+                            className="w-16 p-1 border border-gray-300 rounded-md text-center"
+                        />
                     </div>
 
                     {/* Question Header */}
@@ -551,7 +549,6 @@ const Pyqs: React.FC = () => {
                             Question {currentIndex + 1} of {totalFilteredQuestions}
                         </h2>
                         <span className="text-xs text-gray-500">
-                            {/* Use generated ID */}
                             ID: {currentQuestion.id} | {currentQuestion.paper ?? 'N/A'} {currentQuestion.year && `(${currentQuestion.year})`}
                         </span>
                     </div>
@@ -568,7 +565,7 @@ const Pyqs: React.FC = () => {
                     {currentQuestion.imageUrl && (
                         <div className="mb-4 text-center">
                            <img
-                                src={currentQuestion.imageUrl.startsWith('http') ? currentQuestion.imageUrl : `/${currentQuestion.imageUrl}`}
+                                src={`/${currentQuestion.imageUrl}`}
                                 alt="Question related image"
                                 className="max-w-full h-auto inline-block rounded border border-gray-200"
                                 onError={(e) => {
@@ -585,10 +582,8 @@ const Pyqs: React.FC = () => {
                         </div>
                     )}
 
-
                     {/* Question Text */}
                     <p className="mb-5 text-lg text-gray-900 whitespace-pre-line">{formatText(currentQuestion.question) ?? 'Question text missing'}</p>
-
 
                     {/* Options */}
                     <div className="space-y-3 mb-6">
