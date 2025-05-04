@@ -305,13 +305,13 @@ const Pyqs: React.FC = () => {
         if (debouncedSearchTerm) {
             const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
             filtered = filtered.filter(q =>
-                (q.question?.toLowerCase().includes(lowerSearchTerm)) ||
-                (q.passage?.toLowerCase().includes(lowerSearchTerm)) ||
-                (q.option_a?.toLowerCase().includes(lowerSearchTerm)) ||
-                (q.option_b?.toLowerCase().includes(lowerSearchTerm)) ||
-                (q.option_c?.toLowerCase().includes(lowerSearchTerm)) ||
-                (q.option_d?.toLowerCase().includes(lowerSearchTerm)) ||
-                (q.explanation?.toLowerCase().includes(lowerSearchTerm))
+                (String(q.question || '').toLowerCase().includes(lowerSearchTerm)) ||
+                (String(q.passage || '').toLowerCase().includes(lowerSearchTerm)) ||
+                (String(q.option_a || '').toLowerCase().includes(lowerSearchTerm)) ||
+                (String(q.option_b || '').toLowerCase().includes(lowerSearchTerm)) ||
+                (String(q.option_c || '').toLowerCase().includes(lowerSearchTerm)) ||
+                (String(q.option_d || '').toLowerCase().includes(lowerSearchTerm)) ||
+                (String(q.explanation || '').toLowerCase().includes(lowerSearchTerm))
             );
         }
 
@@ -530,7 +530,7 @@ const Pyqs: React.FC = () => {
                     {currentQuestion.passage && (
                         <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-700">
                             <p className="font-semibold mb-1">Passage:</p>
-                            <p className="whitespace-pre-wrap">{currentQuestion.passage}</p>
+                            <p className="whitespace-pre-line">{currentQuestion.passage}</p>
                         </div>
                     )}
 
@@ -558,7 +558,7 @@ const Pyqs: React.FC = () => {
 
 
                     {/* Question Text */}
-                    <p className="mb-5 text-lg text-gray-900 whitespace-pre-wrap">{currentQuestion.question ?? 'Question text missing'}</p>
+                    <p className="mb-5 text-lg text-gray-900 whitespace-pre-line">{currentQuestion.question ?? 'Question text missing'}</p>
 
 
                     {/* Options */}
@@ -587,7 +587,7 @@ const Pyqs: React.FC = () => {
                             return (
                                 <div key={optLetter} className={optionClasses} onClick={() => handleOptionSelect(optLetter)}>
                                     <span className={`font-bold mr-3`}>{optLetter})</span>
-                                    <span className={`whitespace-pre-wrap flex-1`}>{optionText}</span>
+                                    <span className={`whitespace-pre-line flex-1`}>{optionText}</span>
                                     {isCurrentSubmitted && isCorrect && <span className="ml-auto pl-2 font-bold text-green-600">✓ Correct</span>}
                                     {isCurrentSubmitted && isSelected && !isCorrect && <span className="ml-auto pl-2 font-bold text-red-600">✗ Your Answer</span>}
                                 </div>
@@ -600,7 +600,7 @@ const Pyqs: React.FC = () => {
                         currentQuestion.explanation ? (
                             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
                                 <h3 className="font-semibold text-blue-800 mb-2">Explanation:</h3>
-                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{currentQuestion.explanation}</p>
+                                <p className="text-sm text-gray-700 whitespace-pre-line">{currentQuestion.explanation}</p>
                             </div>
                         ) : (
                             <p className="mt-4 text-sm text-gray-500 italic">No explanation available.</p>
