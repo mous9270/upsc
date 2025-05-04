@@ -435,7 +435,7 @@ const Pyqs: React.FC = () => {
     // --- Render Logic ---
     return (
         <div className="container mx-auto p-4 font-sans">
-            <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">UPSC PYQs Practice (CSV)</h1>
+            <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">UPSC PYQs Practice</h1>
 
              {/* Filter Section */}
             <div className="mb-8 p-4 border rounded-lg shadow-md bg-white">
