@@ -73,16 +73,6 @@ const formatText = (text: string | null): string => {
     return text.replace(/\\n/g, '\n');
 };
 
-// Helper function to format image URLs
-const formatImageUrl = (url: string | null): string | null => {
-    if (!url) return null;
-    // If the URL is just a filename (like "1.png"), prepend the public path
-    if (!url.startsWith('http') && !url.startsWith('/')) {
-        return `/${url}`;
-    }
-    return url;
-};
-
 const Pyqs: React.FC = () => {
     // --- State Variables ---
     const [allQuestions, setAllQuestions] = useState<Question[]>([]);
