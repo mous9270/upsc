@@ -18,7 +18,7 @@ interface Question {
     option_d: string | null; // Allow null
     correct_option: string | null; // Allow null
     explanation: string | null;
-    imageUrl?: string | null; // Added optional imageUrl
+    image_url?: string | null; // Added optional imageUrl
 }
 
 // Interface for filters remains the same
@@ -61,7 +61,7 @@ const transformHeader = (header: string): string => {
         case 'Option D': return 'option_d';
         case 'Correct Answer': return 'correct_option';
         case 'Explanation': return 'explanation';
-        case 'Image Url': return 'imageUrl';
+        case 'Image Url': return 'image_url';
         // Keep other headers as they are (lowercase) or handle them if needed
         default: return trimmedHeader.toLowerCase().replace(/\s+/g, '_'); // Basic fallback
     }
@@ -150,7 +150,7 @@ const Pyqs: React.FC = () => {
                             console.log("First row of data:", firstRow);
                             
                             // Check for essential keys *after* transformation
-                            const requiredTransformedKeys: Array<keyof Omit<Question, 'id' | 'imageUrl'>> = [
+                            const requiredTransformedKeys: Array<keyof Omit<Question, 'id' | 'image_url'>> = [
                                 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option'
                             ];
                             const missingKeys = requiredTransformedKeys.filter(key =>
@@ -185,7 +185,7 @@ const Pyqs: React.FC = () => {
                             option_d: row.option_d ?? null,
                             correct_option: row.correct_option ?? null,
                             explanation: row.explanation ?? null,
-                            imageUrl: row.imageUrl ?? null,
+                            image_url: row.image_url ?? null,
                         }));
 
                         console.log("Processed data sample:", processedData.slice(0, 2));
@@ -569,10 +569,10 @@ const Pyqs: React.FC = () => {
                     )}
 
                     {/* Image (Optional Display) */}
-                    {currentQuestion.imageUrl && (
+                    {currentQuestion.image_url && (
                         <div className="mb-3 sm:mb-4 text-center">
                             <img
-                                src={`/${currentQuestion.imageUrl}`}
+                                src={`/${currentQuestion.image_url}`}
                                 alt="Question related image"
                                 className="max-w-full h-auto inline-block rounded border border-gray-200"
                                 onError={(e) => {
@@ -707,5 +707,3 @@ const Pyqs: React.FC = () => {
 };
 
 export default Pyqs;
-
-
