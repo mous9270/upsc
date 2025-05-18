@@ -154,7 +154,7 @@ const Quiz: React.FC = () => {
                 <div className="max-w-3xl mx-auto">
                     <div className="mb-4 flex justify-between items-center">
                         <span className="text-gray-600">
-                            Question {quizState.currentIndex + 1} of {quizState.questions.length}
+                            Total Questions: {quizState.questions.length}
                         </span>
                         <button
                             onClick={handleSubmit}
@@ -164,38 +164,42 @@ const Quiz: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                        {currentQuestion.passage && (
-                            <div className="mb-4 p-4 bg-gray-50 rounded">
-                                <p className="font-semibold mb-2">Passage:</p>
-                                <p className="whitespace-pre-line">{currentQuestion.passage}</p>
+                    {quizState.questions.map((question, index) => (
+                        <div key={index} className="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div className="mb-4">
+                                <span className="text-gray-600">Question {index + 1}</span>
+                                {question.passage && (
+                                    <div className="mt-2 p-4 bg-gray-50 rounded">
+                                        <p className="font-semibold mb-2">Passage:</p>
+                                        <p className="whitespace-pre-line">{question.passage}</p>
+                                    </div>
+                                )}
+                                <p className="mt-2 text-lg whitespace-pre-line">{question.question}</p>
                             </div>
-                        )}
 
-                        <p className="text-lg mb-4">{currentQuestion.question}</p>
-
-                        <div className="space-y-3">
-                            {['A', 'B', 'C', 'D'].map((option) => {
-                                const optionKey = `option_${option.toLowerCase()}` as keyof QuizQuestion;
-                                const isSelected = quizState.selectedAnswers[quizState.currentIndex] === option;
-                                
-                                return (
-                                    <button
-                                        key={option}
-                                        onClick={() => handleAnswerSelect(option)}
-                                        className={`w-full p-3 text-left rounded border transition-colors ${
-                                            isSelected
-                                                ? 'bg-indigo-100 border-indigo-400'
-                                                : 'bg-white border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <span className="font-bold mr-2">{option})</span>
-                                        {currentQuestion[optionKey]}
-                                    </button>
-                                );
-                            })}
+                            <div className="space-y-3">
+                                {['A', 'B', 'C', 'D'].map((option) => {
+                                    const optionKey = `option_${option.toLowerCase()}` as keyof QuizQuestion;
+                                    const isSelected = quizState.selectedAnswers[index] === option;
+                                    
+                                    return (
+                                        <button
+                                            key={option}
+                                            onClick={() => handleAnswerSelect(option)}
+                                            className={`w-full p-3 text-left rounded border transition-colors ${
+                                                isSelected
+                                                    ? 'bg-indigo-100 border-indigo-400'
+                                                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <span className="font-bold mr-2">{option})</span>
+                                            <span className="whitespace-pre-line">{question[optionKey]}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
+                    ))}
                 </div>
             )}
 
