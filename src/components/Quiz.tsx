@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import Papa from 'papaparse';
 
 interface QuizQuestion {
@@ -128,8 +128,6 @@ const Quiz: React.FC = () => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
-
-    const currentQuestion = quizState.questions[quizState.currentIndex];
 
     return (
         <div className="container mx-auto px-4 py-8">
