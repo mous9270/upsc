@@ -429,6 +429,16 @@ const Pyqs: React.FC = () => {
         <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 font-sans">
             <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">UPSC PYQs Practice</h1>
 
+            {/* Quiz Button */}
+            <div className="mb-4 sm:mb-6 flex justify-end">
+                <a
+                    href="/quiz"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                >
+                    Take Quiz
+                </a>
+            </div>
+
             {/* Filter Section - Now Collapsible */}
             <div className="mb-4 sm:mb-8 border rounded-lg shadow-md bg-white">
                 <button
@@ -668,7 +678,7 @@ const Pyqs: React.FC = () => {
                 <div className={`transition-all duration-300 ease-in-out ${isFooterOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                     <div className="p-4 text-sm text-gray-500">
                         <p className="mb-3 max-w-2xl">
-                        Note: Current explanations have been removed as they were taken from random sources without carefully considering copyright. As the community is growing, I want to be more careful. With the help of others, I will work to provide more authentic explanations and make the website better. If you’d like to check the GitHub link, it’s provided below — contributions are welcome. Explanations on this platform are contributed by users for educational purposes. If you believe any content infringes copyright, please contact us and we will remove it promptly.
+                        Note: Current explanations have been removed as they were taken from random sources without carefully considering copyright. As the community is growing, I want to be more careful. With the help of others, I will work to provide more authentic explanations and make the website better. If you'd like to check the GitHub link, it's provided below — contributions are welcome. Explanations on this platform are contributed by users for educational purposes. If you believe any content infringes copyright, please contact us and we will remove it promptly.
 
 
                         </p>
