@@ -152,16 +152,10 @@ const Quiz: React.FC = () => {
 
             {quizState.questions.length > 0 && !quizState.submitted && (
                 <div className="max-w-3xl mx-auto">
-                    <div className="mb-4 flex justify-between items-center">
+                    <div className="mb-4">
                         <span className="text-gray-600">
                             Total Questions: {quizState.questions.length}
                         </span>
-                        <button
-                            onClick={handleSubmit}
-                            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                        >
-                            Submit Quiz
-                        </button>
                     </div>
 
                     {quizState.questions.map((question, index) => (
@@ -200,12 +194,26 @@ const Quiz: React.FC = () => {
                             </div>
                         </div>
                     ))}
+
+                    <div className="sticky bottom-0 bg-white py-4 border-t border-gray-200 shadow-lg">
+                        <div className="max-w-3xl mx-auto px-4 flex justify-between items-center">
+                            <span className="text-gray-600">
+                                Selected Answers: {Object.keys(quizState.selectedAnswers).length} of {quizState.questions.length}
+                            </span>
+                            <button
+                                onClick={handleSubmit}
+                                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                                Submit Quiz
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
             {quizState.submitted && (
                 <div className="max-w-3xl mx-auto">
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-0 z-10">
                         <h2 className="text-2xl font-bold mb-4">Quiz Results</h2>
                         <p className="text-lg mb-4">
                             Score: {quizState.score} out of {quizState.questions.length}
@@ -219,53 +227,55 @@ const Quiz: React.FC = () => {
                         </button>
                     </div>
 
-                    {quizState.questions.map((question, index) => (
-                        <div key={index} className="bg-white rounded-lg shadow-md p-6 mb-6">
-                            <div className="mb-4">
-                                <span className="text-gray-600">Question {index + 1}</span>
-                                {question.passage && (
-                                    <div className="mt-2 p-4 bg-gray-50 rounded">
-                                        <p className="font-semibold mb-2">Passage:</p>
-                                        <p className="whitespace-pre-line">{question.passage}</p>
+                    <div className="mt-8">
+                        {quizState.questions.map((question, index) => (
+                            <div key={index} className="bg-white rounded-lg shadow-md p-6 mb-6">
+                                <div className="mb-4">
+                                    <span className="text-gray-600">Question {index + 1}</span>
+                                    {question.passage && (
+                                        <div className="mt-2 p-4 bg-gray-50 rounded">
+                                            <p className="font-semibold mb-2">Passage:</p>
+                                            <p className="whitespace-pre-line">{question.passage}</p>
+                                        </div>
+                                    )}
+                                    <p className="mt-2 text-lg">{question.question}</p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    {['A', 'B', 'C', 'D'].map((option) => {
+                                        const optionKey = `option_${option.toLowerCase()}` as keyof QuizQuestion;
+                                        const isSelected = quizState.selectedAnswers[index] === option;
+                                        const isCorrect = question.correct_option?.toUpperCase() === option;
+
+                                        return (
+                                            <div
+                                                key={option}
+                                                className={`p-3 rounded border ${
+                                                    isCorrect
+                                                        ? 'bg-green-100 border-green-400'
+                                                        : isSelected
+                                                        ? 'bg-red-100 border-red-400'
+                                                        : 'bg-white border-gray-300'
+                                                }`}
+                                            >
+                                                <span className="font-bold mr-2">{option})</span>
+                                                {question[optionKey]}
+                                                {isCorrect && <span className="ml-2 text-green-600">✓</span>}
+                                                {isSelected && !isCorrect && <span className="ml-2 text-red-600">✗</span>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {question.explanation && (
+                                    <div className="mt-4 p-4 bg-blue-50 rounded">
+                                        <p className="font-semibold text-blue-800 mb-2">Explanation:</p>
+                                        <p className="text-gray-700">{question.explanation}</p>
                                     </div>
                                 )}
-                                <p className="mt-2 text-lg">{question.question}</p>
                             </div>
-
-                            <div className="space-y-2">
-                                {['A', 'B', 'C', 'D'].map((option) => {
-                                    const optionKey = `option_${option.toLowerCase()}` as keyof QuizQuestion;
-                                    const isSelected = quizState.selectedAnswers[index] === option;
-                                    const isCorrect = question.correct_option?.toUpperCase() === option;
-
-                                    return (
-                                        <div
-                                            key={option}
-                                            className={`p-3 rounded border ${
-                                                isCorrect
-                                                    ? 'bg-green-100 border-green-400'
-                                                    : isSelected
-                                                    ? 'bg-red-100 border-red-400'
-                                                    : 'bg-white border-gray-300'
-                                            }`}
-                                        >
-                                            <span className="font-bold mr-2">{option})</span>
-                                            {question[optionKey]}
-                                            {isCorrect && <span className="ml-2 text-green-600">✓</span>}
-                                            {isSelected && !isCorrect && <span className="ml-2 text-red-600">✗</span>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {question.explanation && (
-                                <div className="mt-4 p-4 bg-blue-50 rounded">
-                                    <p className="font-semibold text-blue-800 mb-2">Explanation:</p>
-                                    <p className="text-gray-700">{question.explanation}</p>
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
