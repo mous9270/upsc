@@ -49,18 +49,18 @@ const Quiz: React.FC = () => {
                 try {
                     const questions = results.data.map((row: any, index: number) => ({
                         id: index + 1,
-                        paper: row.Paper || null,
-                        passage: row.Passage || null,
-                        question: row.Question || null,
-                        option_a: row['Option A'] || null,
-                        option_b: row['Option B'] || null,
-                        option_c: row['Option C'] || null,
-                        option_d: row['Option D'] || null,
-                        correct_option: row['Correct Answer'] || null,
-                        explanation: row.Explanation || null,
-                        subject: row.Subject || null,
-                        topic: row.Topic || null,
-                        year: row.Year || null,
+                        paper: row.Paper?.replace(/\\n/g, '\n') || null,
+                        passage: row.Passage?.replace(/\\n/g, '\n') || null,
+                        question: row.Question?.replace(/\\n/g, '\n') || null,
+                        option_a: row['Option A']?.replace(/\\n/g, '\n') || null,
+                        option_b: row['Option B']?.replace(/\\n/g, '\n') || null,
+                        option_c: row['Option C']?.replace(/\\n/g, '\n') || null,
+                        option_d: row['Option D']?.replace(/\\n/g, '\n') || null,
+                        correct_option: row['Correct Answer']?.replace(/\\n/g, '\n') || null,
+                        explanation: row.Explanation?.replace(/\\n/g, '\n') || null,
+                        subject: row.Subject?.replace(/\\n/g, '\n') || null,
+                        topic: row.Topic?.replace(/\\n/g, '\n') || null,
+                        year: row.Year?.replace(/\\n/g, '\n') || null,
                     }));
 
                     setQuizState({
@@ -82,14 +82,14 @@ const Quiz: React.FC = () => {
         });
     };
 
-    const handleAnswerSelect = (option: string) => {
+    const handleAnswerSelect = (questionIndex: number, option: string) => {
         if (quizState.submitted) return;
 
         setQuizState(prev => ({
             ...prev,
             selectedAnswers: {
                 ...prev.selectedAnswers,
-                [quizState.currentIndex]: option
+                [questionIndex]: option
             }
         }));
     };
@@ -185,7 +185,7 @@ const Quiz: React.FC = () => {
                                     return (
                                         <button
                                             key={option}
-                                            onClick={() => handleAnswerSelect(option)}
+                                            onClick={() => handleAnswerSelect(index, option)}
                                             className={`w-full p-3 text-left rounded border transition-colors ${
                                                 isSelected
                                                     ? 'bg-indigo-100 border-indigo-400'
