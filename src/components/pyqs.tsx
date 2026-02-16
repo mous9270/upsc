@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 // Import PapaParse from the installed npm package
 import Papa from 'papaparse';
 
+import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } from '@capacitor-community/admob';
 // Interface for the Question data structure
 // Updated to include optional imageUrl and ensure keys match transformed headers
 interface Question {
@@ -102,6 +103,28 @@ const Pyqs: React.FC = () => {
         return () => clearTimeout(timerId);
     }, [searchTerm]);
 
+    useEffect(() => {
+        const initializeAds = async () => {
+            // 1. Initialize AdMob (Removed 'requestTrackingAuthorization' to fix error)
+            await AdMob.initialize({
+                testingDevices: ['YOUR_DEVICE_ID'], // Add your test device ID here if needed
+                initializeForTesting: true, // Remove this line when publishing to Play Store!
+            });
+    
+            // 2. Show the Banner
+            await AdMob.showBanner({
+                adId: 'ca-app-pub-3940256099942544/6300978111', // Test ID. Replace with real ID later.
+                adSize: BannerAdSize.BANNER,
+                position: BannerAdPosition.BOTTOM_CENTER,
+                margin: 0,
+            });
+        };
+    
+        // Only run on native mobile
+        if ((window as any).Capacitor) {
+            initializeAds();
+        }
+    }, []);
     // --- Fetch and Parse CSV Data ---
     useEffect(() => {
         const fetchAndParseCsv = async () => {
@@ -426,7 +449,7 @@ const Pyqs: React.FC = () => {
 
     // --- Render Logic ---
     return (
-        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 font-sans">
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
             <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">UPSC PYQs Practice</h1>
 
             {/* Quiz Button */}
