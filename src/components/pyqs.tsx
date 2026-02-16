@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 // Import PapaParse from the installed npm package
 import Papa from 'papaparse';
 
-import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } from '@capacitor-community/admob';
+import { AdMob, BannerAdSize, BannerAdPosition} from '@capacitor-community/admob';
 // Interface for the Question data structure
 // Updated to include optional imageUrl and ensure keys match transformed headers
 interface Question {
