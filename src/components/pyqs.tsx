@@ -113,7 +113,7 @@ const Pyqs: React.FC = () => {
     
             // 2. Show the Banner
             await AdMob.showBanner({
-                adId: 'ca-app-pub-3940256099942544/6300978111', // Test ID. Replace with real ID later.
+                adId: 'ca-app-pub-9069102058764839/6576785393', // Test ID. Replace with real ID later.
                 adSize: BannerAdSize.BANNER,
                 position: BannerAdPosition.BOTTOM_CENTER,
                 margin: 0,
