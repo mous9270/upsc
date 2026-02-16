@@ -108,7 +108,7 @@ const Pyqs: React.FC = () => {
             // 1. Initialize AdMob (Removed 'requestTrackingAuthorization' to fix error)
             await AdMob.initialize({
                 testingDevices: ['YOUR_DEVICE_ID'], // Add your test device ID here if needed
-                initializeForTesting: true, // Remove this line when publishing to Play Store!
+                // initializeForTesting: true, // Remove this line when publishing to Play Store!
             });
     
             // 2. Show the Banner
