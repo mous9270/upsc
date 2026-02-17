@@ -701,6 +701,10 @@ const Pyqs: React.FC = () => {
                 <div className={`transition-all duration-300 ease-in-out ${isFooterOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                     <div className="p-4 text-sm text-gray-500">
                         <p className="mb-3 max-w-2xl">
+                        Disclaimer: This app is not affiliated with, associated with, endorsed by, or in any way officially connected with the Union Public Service Commission (UPSC).
+                        <br />
+                        Source of Information: The previous year questions provided in this app are sourced from the official UPSC website:https://upsc.gov.in/examinations/previous-question-papers
+                        <br />
                         Note: Explanations on this platform are contributed by users for educational purposes. If you believe any content infringes copyright, please contact us and we will remove it promptly.
 
 
