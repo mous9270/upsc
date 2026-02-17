@@ -711,7 +711,7 @@ const Pyqs: React.FC = () => {
                         </p>
                         <div className="mb-3 space-y-1">
                             <p className="text-gray-600 font-medium">Contact us:</p>
-                            <p>Email: srinivas@upscpreviousquestiones.com</p>
+                            <p>Email: upscpreviousquestions@gmail.com</p>
                             <p>
                                 Telegram:{' '}
                                 <a 
