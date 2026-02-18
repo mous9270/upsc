@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
 import { App } from '@capacitor/app';
-
+import { useNavigate } from 'react-router-dom';
 type DataSource = 'builtin' | 'upload' | null;
 
 interface Question {
@@ -162,25 +162,25 @@ const Quiz: React.FC = () => {
         setError(null);
     }, [dataSource]);
 
- 
+    const navigate = useNavigate(); 
 
 // Inside your Quiz component, add this useEffect:
 useEffect(() => {
-    const handleBackButton = App.addListener('backButton', () => {
-        if (quizState.questions.length > 0 && !quizState.submitted) {
-            // User is in an active quiz — go back to home (reset state)
-            setQuizState({ questions: [], selectedAnswers: {}, submitted: false, score: 0 });
-            setDataSource(null);
+    const listener = App.addListener('backButton', ({ canGoBack }) => {
+        const currentPath = window.location.pathname;
+        if (currentPath === '/quiz') {
+            navigate('/home');
+        } else if (canGoBack) {
+            window.history.back();
         } else {
-            // No active quiz, exit the app
             App.exitApp();
         }
     });
 
     return () => {
-        handleBackButton.then((listener) => listener.remove());
+        listener.then((l) => l.remove());
     };
-}, [quizState.questions.length, quizState.submitted]);
+}, [navigate]);
 
     useEffect(() => {
         const loadBuiltinQuestions = async (): Promise<void> => {
