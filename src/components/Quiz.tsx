@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
+import { App } from '@capacitor/app';
 
 type DataSource = 'builtin' | 'upload' | null;
 
@@ -160,6 +161,26 @@ const Quiz: React.FC = () => {
         setQuestionLimit('');
         setError(null);
     }, [dataSource]);
+
+ 
+
+// Inside your Quiz component, add this useEffect:
+useEffect(() => {
+    const handleBackButton = App.addListener('backButton', () => {
+        if (quizState.questions.length > 0 && !quizState.submitted) {
+            // User is in an active quiz — go back to home (reset state)
+            setQuizState({ questions: [], selectedAnswers: {}, submitted: false, score: 0 });
+            setDataSource(null);
+        } else {
+            // No active quiz, exit the app
+            App.exitApp();
+        }
+    });
+
+    return () => {
+        handleBackButton.then((listener) => listener.remove());
+    };
+}, [quizState.questions.length, quizState.submitted]);
 
     useEffect(() => {
         const loadBuiltinQuestions = async (): Promise<void> => {
