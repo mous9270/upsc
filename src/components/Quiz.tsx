@@ -332,7 +332,9 @@ const Quiz: React.FC = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6 text-center">UPSC Quiz</h1>
+            <h1 className="text-3xl font-bold mb-6 text-center">
+                <a href="/">UPSC Quiz</a>
+            </h1>
 
             {/* Data source buttons */}
             <div className="max-w-3xl mx-auto mb-6 flex flex-col sm:flex-row gap-3 justify-center">
