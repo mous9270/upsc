@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
 
-interface QuizQuestion {
+type DataSource = 'builtin' | 'upload' | null;
+
+interface Question {
     id: number;
     paper: string | null;
+    subject: string | null;
+    topic: string | null;
+    year: string | null;
     passage: string | null;
     question: string | null;
     option_a: string | null;
@@ -12,267 +17,853 @@ interface QuizQuestion {
     option_d: string | null;
     correct_option: string | null;
     explanation: string | null;
-    subject: string | null;
-    topic: string | null;
-    year: string | null;
+    image_url?: string | null;
 }
 
 interface QuizState {
-    questions: QuizQuestion[];
+    questions: Question[];
     currentIndex: number;
-    selectedAnswers: { [key: number]: string };
+    selectedAnswers: Record<number, string>;
     submitted: boolean;
     score: number;
 }
 
+interface Filters {
+    paper: string;
+    subject: string;
+    topic: string;
+    year: string;
+}
+
+interface BuiltinRow {
+    paper?: string | null;
+    subject?: string | null;
+    topic?: string | null;
+    year?: string | number | null;
+    passage?: string | null;
+    question?: string | null;
+    option_a?: string | null;
+    option_b?: string | null;
+    option_c?: string | null;
+    option_d?: string | null;
+    correct_option?: string | null;
+    explanation?: string | null;
+    image_url?: string | null;
+    [key: string]: unknown;
+}
+
+interface UploadedRow {
+    Paper?: string | null;
+    Subject?: string | null;
+    Topic?: string | null;
+    Year?: string | number | null;
+    Passage?: string | null;
+    Question?: string | null;
+    'Option A'?: string | null;
+    'Option B'?: string | null;
+    'Option C'?: string | null;
+    'Option D'?: string | null;
+    'Correct Answer'?: string | null;
+    Explanation?: string | null;
+    'Image Url'?: string | null;
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+    let currentIndex = array.length;
+    const newArray = [...array];
+    while (currentIndex !== 0) {
+        const randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+        const temp = newArray[currentIndex];
+        newArray[currentIndex] = newArray[randomIndex];
+        newArray[randomIndex] = temp;
+    }
+    return newArray;
+}
+
+const transformHeader = (header: string): string => {
+    const trimmedHeader = header.trim();
+    switch (trimmedHeader) {
+        case 'Paper':
+            return 'paper';
+        case 'Subject':
+            return 'subject';
+        case 'Topic':
+            return 'topic';
+        case 'Year':
+            return 'year';
+        case 'Passage':
+            return 'passage';
+        case 'Question':
+            return 'question';
+        case 'Option A':
+            return 'option_a';
+        case 'Option B':
+            return 'option_b';
+        case 'Option C':
+            return 'option_c';
+        case 'Option D':
+            return 'option_d';
+        case 'Correct Answer':
+            return 'correct_option';
+        case 'Explanation':
+            return 'explanation';
+        case 'Image Url':
+            return 'image_url';
+        default:
+            return trimmedHeader.toLowerCase().replace(/\s+/g, '_');
+    }
+};
+
+const normalizeCell = (value: unknown): string | null => {
+    if (value === null || value === undefined) {
+        return null;
+    }
+    const str = String(value);
+    if (!str.trim()) {
+        return null;
+    }
+    return str.replace(/\\n/g, '\n');
+};
+
+const formatText = (text: string | null | number): string => {
+    if (text === null || text === undefined || text === '') {
+        return '';
+    }
+    return String(text);
+};
+
+const applyFilters = (
+    questions: Question[],
+    filters: Filters,
+    isRandom: boolean,
+    questionLimit: number | null
+): Question[] => {
+    let filtered = [...questions];
+
+    if (filters.paper) {
+        filtered = filtered.filter((q) => q.paper === filters.paper);
+    }
+    if (filters.subject) {
+        filtered = filtered.filter((q) => q.subject === filters.subject);
+    }
+    if (filters.topic) {
+        filtered = filtered.filter((q) => q.topic === filters.topic);
+    }
+    if (filters.year) {
+        filtered = filtered.filter((q) => q.year === filters.year);
+    }
+
+    if (isRandom) {
+        filtered = shuffleArray(filtered);
+    }
+
+    if (questionLimit !== null && questionLimit > 0) {
+        filtered = filtered.slice(0, questionLimit);
+    }
+
+    return filtered;
+};
+
+const calculateScore = (questions: Question[], selectedAnswers: Record<number, string>): number => {
+    return questions.reduce((acc, question, index) => {
+        const selected = selectedAnswers[index];
+        if (!selected || !question.correct_option) {
+            return acc;
+        }
+        if (question.correct_option.toUpperCase() === selected.toUpperCase()) {
+            return acc + 1;
+        }
+        return acc;
+    }, 0);
+};
+
 const Quiz: React.FC = () => {
+    const [dataSource, setDataSource] = useState<DataSource>(null);
+    const [allQuestions, setAllQuestions] = useState<Question[]>([]);
     const [quizState, setQuizState] = useState<QuizState>({
         questions: [],
         currentIndex: 0,
         selectedAnswers: {},
         submitted: false,
-        score: 0
+        score: 0,
     });
-    const [isLoading, setIsLoading] = useState(false);
+    const [filters, setFilters] = useState<Filters>({
+        paper: '',
+        subject: '',
+        topic: '',
+        year: '',
+    });
+    const [isRandom, setIsRandom] = useState<boolean>(false);
+    const [questionLimit, setQuestionLimit] = useState<string>('');
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
+    useEffect(() => {
+        setAllQuestions([]);
+        setQuizState({
+            questions: [],
+            currentIndex: 0,
+            selectedAnswers: {},
+            submitted: false,
+            score: 0,
+        });
+        setFilters({
+            paper: '',
+            subject: '',
+            topic: '',
+            year: '',
+        });
+        setIsRandom(false);
+        setQuestionLimit('');
+        setError(null);
+    }, [dataSource]);
 
+    useEffect(() => {
+        const loadBuiltinQuestions = async (): Promise<void> => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const response = await fetch('/upscpyqs.csv');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch built-in questions (status ${response.status})`);
+                }
+                const csvText = await response.text();
+                if (!csvText.trim()) {
+                    throw new Error('Built-in CSV is empty.');
+                }
+
+                Papa.parse<BuiltinRow>(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    dynamicTyping: true,
+                    transformHeader,
+                    complete: (results) => {
+                        const processed: Question[] = results.data.map((row, index) => ({
+                            id: index + 1,
+                            paper: normalizeCell(row.paper ?? null),
+                            subject: normalizeCell(row.subject ?? null),
+                            topic: normalizeCell(row.topic ?? null),
+                            year: normalizeCell(row.year ?? null),
+                            passage: normalizeCell(row.passage ?? null),
+                            question: normalizeCell(row.question ?? null),
+                            option_a: normalizeCell(row.option_a ?? null),
+                            option_b: normalizeCell(row.option_b ?? null),
+                            option_c: normalizeCell(row.option_c ?? null),
+                            option_d: normalizeCell(row.option_d ?? null),
+                            correct_option: normalizeCell(row.correct_option ?? null),
+                            explanation: normalizeCell(row.explanation ?? null),
+                            image_url: normalizeCell(row.image_url ?? null),
+                        }));
+                        setAllQuestions(processed);
+                        setIsLoading(false);
+                    },
+                });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'Unknown error loading built-in questions.';
+                setError(message);
+                setIsLoading(false);
+            }
+        };
+
+        if (dataSource === 'builtin') {
+            void loadBuiltinQuestions();
+        }
+    }, [dataSource]);
+
+    const handleUploadedCsv = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            return;
+        }
         setIsLoading(true);
         setError(null);
 
-        Papa.parse(file, {
+        Papa.parse<UploadedRow>(file, {
             header: true,
+            skipEmptyLines: true,
             complete: (results) => {
-                try {
-                    const questions = results.data.map((row: any, index: number) => ({
-                        id: index + 1,
-                        paper: row.Paper?.replace(/\\n/g, '\n') || null,
-                        passage: row.Passage?.replace(/\\n/g, '\n') || null,
-                        question: row.Question?.replace(/\\n/g, '\n') || null,
-                        option_a: row['Option A']?.replace(/\\n/g, '\n') || null,
-                        option_b: row['Option B']?.replace(/\\n/g, '\n') || null,
-                        option_c: row['Option C']?.replace(/\\n/g, '\n') || null,
-                        option_d: row['Option D']?.replace(/\\n/g, '\n') || null,
-                        correct_option: row['Correct Answer']?.replace(/\\n/g, '\n') || null,
-                        explanation: row.Explanation?.replace(/\\n/g, '\n') || null,
-                        subject: row.Subject?.replace(/\\n/g, '\n') || null,
-                        topic: row.Topic?.replace(/\\n/g, '\n') || null,
-                        year: row.Year?.replace(/\\n/g, '\n') || null,
-                    }));
+                const processed: Question[] = results.data.map((row, index) => ({
+                    id: index + 1,
+                    paper: normalizeCell(row.Paper ?? null),
+                    subject: normalizeCell(row.Subject ?? null),
+                    topic: normalizeCell(row.Topic ?? null),
+                    year: normalizeCell(row.Year ?? null),
+                    passage: normalizeCell(row.Passage ?? null),
+                    question: normalizeCell(row.Question ?? null),
+                    option_a: normalizeCell(row['Option A'] ?? null),
+                    option_b: normalizeCell(row['Option B'] ?? null),
+                    option_c: normalizeCell(row['Option C'] ?? null),
+                    option_d: normalizeCell(row['Option D'] ?? null),
+                    correct_option: normalizeCell(row['Correct Answer'] ?? null),
+                    explanation: normalizeCell(row.Explanation ?? null),
+                    image_url: normalizeCell(row['Image Url'] ?? null),
+                }));
 
-                    setQuizState({
-                        questions,
-                        currentIndex: 0,
-                        selectedAnswers: {},
-                        submitted: false,
-                        score: 0
-                    });
-                } catch (err) {
-                    setError('Error processing CSV file. Please check the format.');
+                if (!processed.length) {
+                    setError('Uploaded CSV did not contain any questions.');
+                    setAllQuestions([]);
+                    setIsLoading(false);
+                    return;
                 }
+
+                setAllQuestions(processed);
                 setIsLoading(false);
             },
-            error: (error) => {
-                setError('Error reading CSV file: ' + error.message);
+            error: (parseError) => {
+                setError(`Failed to parse uploaded CSV: ${parseError.message}`);
+                setAllQuestions([]);
                 setIsLoading(false);
-            }
+            },
         });
     };
 
-    const handleAnswerSelect = (questionIndex: number, option: string) => {
-        if (quizState.submitted) return;
+    const startQuiz = (): void => {
+        if (!allQuestions.length) {
+            setError('No questions available. Please load questions first.');
+            return;
+        }
 
-        setQuizState(prev => ({
+        let preparedQuestions = allQuestions;
+
+        if (dataSource === 'builtin') {
+            const trimmedLimit = questionLimit.trim();
+            const limitNumber =
+                trimmedLimit.length > 0 ? Number.parseInt(trimmedLimit, 10) : Number.NaN;
+            const limit = Number.isNaN(limitNumber) ? null : limitNumber;
+
+            preparedQuestions = applyFilters(allQuestions, filters, isRandom, limit);
+
+            if (!preparedQuestions.length) {
+                setError('No questions match the selected filters.');
+                return;
+            }
+        }
+
+        setQuizState({
+            questions: preparedQuestions,
+            currentIndex: 0,
+            selectedAnswers: {},
+            submitted: false,
+            score: 0,
+        });
+        setError(null);
+    };
+
+    const handleAnswerSelect = (option: string): void => {
+        if (quizState.submitted) {
+            return;
+        }
+        const index = quizState.currentIndex;
+        setQuizState((prev) => ({
             ...prev,
             selectedAnswers: {
                 ...prev.selectedAnswers,
-                [questionIndex]: option
-            }
+                [index]: option,
+            },
         }));
     };
 
-    const handleSubmit = () => {
-        let score = 0;
-        quizState.questions.forEach((question, index) => {
-            if (question.correct_option?.toUpperCase() === quizState.selectedAnswers[index]?.toUpperCase()) {
-                score++;
-            }
-        });
+    const goToPrevious = (): void => {
+        setQuizState((prev) => ({
+            ...prev,
+            currentIndex: prev.currentIndex > 0 ? prev.currentIndex - 1 : prev.currentIndex,
+        }));
+    };
 
-        setQuizState(prev => ({
+    const goToNext = (): void => {
+        setQuizState((prev) => ({
+            ...prev,
+            currentIndex:
+                prev.currentIndex < prev.questions.length - 1
+                    ? prev.currentIndex + 1
+                    : prev.currentIndex,
+        }));
+    };
+
+    const submitQuiz = (): void => {
+        if (quizState.submitted || !quizState.questions.length) {
+            return;
+        }
+        const score = calculateScore(quizState.questions, quizState.selectedAnswers);
+        setQuizState((prev) => ({
             ...prev,
             submitted: true,
-            score
+            score,
         }));
     };
 
-    const handleSaveQuiz = () => {
-        const quizData = {
-            questions: quizState.questions,
-            answers: quizState.selectedAnswers,
-            score: quizState.score,
-            totalQuestions: quizState.questions.length,
-            date: new Date().toISOString()
-        };
-
-        const blob = new Blob([JSON.stringify(quizData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `quiz-results-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    const handleFilterChange = (
+        event: React.ChangeEvent<HTMLSelectElement>
+    ): void => {
+        const { name, value } = event.target;
+        setFilters((prev) => {
+            const next = { ...prev, [name]: value };
+            if (name === 'paper') {
+                next.subject = '';
+                next.topic = '';
+            } else if (name === 'subject') {
+                next.topic = '';
+            }
+            return next;
+        });
     };
+
+    const availablePapers = useMemo(() => {
+        if (dataSource !== 'builtin') {
+            return [];
+        }
+        const papers = allQuestions
+            .map((q) => q.paper)
+            .filter((p): p is string => Boolean(p));
+        return Array.from(new Set(papers)).sort();
+    }, [allQuestions, dataSource]);
+
+    const availableSubjects = useMemo(() => {
+        if (dataSource !== 'builtin') {
+            return [];
+        }
+        const base = filters.paper
+            ? allQuestions.filter((q) => q.paper === filters.paper)
+            : allQuestions;
+        const subjects = base
+            .map((q) => q.subject)
+            .filter((s): s is string => Boolean(s));
+        return Array.from(new Set(subjects)).sort();
+    }, [allQuestions, dataSource, filters.paper]);
+
+    const availableTopics = useMemo(() => {
+        if (dataSource !== 'builtin') {
+            return [];
+        }
+        let base = filters.paper
+            ? allQuestions.filter((q) => q.paper === filters.paper)
+            : allQuestions;
+        if (filters.subject) {
+            base = base.filter((q) => q.subject === filters.subject);
+        }
+        const topics = base
+            .map((q) => q.topic)
+            .filter((t): t is string => Boolean(t));
+        return Array.from(new Set(topics)).sort();
+    }, [allQuestions, dataSource, filters.paper, filters.subject]);
+
+    const availableYears = useMemo(() => {
+        if (dataSource !== 'builtin') {
+            return [];
+        }
+        const years = allQuestions
+            .map((q) => q.year)
+            .filter((y): y is string => Boolean(y));
+        return Array.from(new Set(years)).sort(
+            (a, b) => Number.parseInt(b, 10) - Number.parseInt(a, 10)
+        );
+    }, [allQuestions, dataSource]);
+
+    const currentQuestion =
+        quizState.questions.length > 0
+            ? quizState.questions[quizState.currentIndex]
+            : null;
+
+    const totalQuestions = quizState.questions.length;
+
+    const percentage =
+        totalQuestions > 0 ? ((quizState.score / totalQuestions) * 100).toFixed(1) : '0.0';
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8 text-center">UPSC Quiz</h1>
+            <h1 className="text-3xl font-bold mb-6 text-center">UPSC Quiz</h1>
 
-            {!quizState.questions.length && (
-                <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4">Upload Quiz CSV</h2>
-                    <input
-                        type="file"
-                        accept=".csv"
-                        onChange={handleFileUpload}
-                        className="w-full p-2 border border-gray-300 rounded"
-                        disabled={isLoading}
-                    />
-                    {isLoading && <p className="mt-2 text-blue-600">Loading quiz...</p>}
-                    {error && <p className="mt-2 text-red-600">{error}</p>}
+            <div className="max-w-3xl mx-auto mb-6 flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                    type="button"
+                    onClick={() => setDataSource('builtin')}
+                    className={`px-4 py-2 rounded-md border text-sm font-medium ${
+                        dataSource === 'builtin'
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                    Use Built-in UPSC PYQs
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setDataSource('upload')}
+                    className={`px-4 py-2 rounded-md border text-sm font-medium ${
+                        dataSource === 'upload'
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                    Upload Your Own CSV
+                </button>
+            </div>
+
+            {dataSource === null && (
+                <p className="text-center text-gray-600">
+                    Select a data source to begin your UPSC Prelims quiz.
+                </p>
+            )}
+
+            {dataSource === 'builtin' && (
+                <div className="max-w-3xl mx-auto mb-6 bg-white rounded-lg shadow-md p-4">
+                    <h2 className="text-lg font-semibold mb-3">Built-in Question Filters</h2>
+                    {isLoading && (
+                        <p className="text-blue-600 text-sm mb-2">Loading built-in questions...</p>
+                    )}
+                    {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+                    {!isLoading && !error && !allQuestions.length && (
+                        <p className="text-gray-500 text-sm">
+                            No built-in questions available. Ensure `upscpyqs.csv` is present.
+                        </p>
+                    )}
+                    {allQuestions.length > 0 && (
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label
+                                        htmlFor="paper"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
+                                        Paper
+                                    </label>
+                                    <select
+                                        id="paper"
+                                        name="paper"
+                                        value={filters.paper}
+                                        onChange={handleFilterChange}
+                                        className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                                    >
+                                        <option value="">All Papers</option>
+                                        {availablePapers.map((paper) => (
+                                            <option key={paper} value={paper}>
+                                                {paper}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label
+                                        htmlFor="subject"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
+                                        Subject
+                                    </label>
+                                    <select
+                                        id="subject"
+                                        name="subject"
+                                        value={filters.subject}
+                                        onChange={handleFilterChange}
+                                        className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                                        disabled={!availableSubjects.length}
+                                    >
+                                        <option value="">
+                                            {filters.paper ? 'All Subjects for Paper' : 'All Subjects'}
+                                        </option>
+                                        {availableSubjects.map((subject) => (
+                                            <option key={subject} value={subject}>
+                                                {subject}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label
+                                        htmlFor="topic"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
+                                        Topic
+                                    </label>
+                                    <select
+                                        id="topic"
+                                        name="topic"
+                                        value={filters.topic}
+                                        onChange={handleFilterChange}
+                                        className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                                        disabled={!availableTopics.length}
+                                    >
+                                        <option value="">
+                                            {filters.subject ? 'All Topics for Subject' : 'All Topics'}
+                                        </option>
+                                        {availableTopics.map((topic) => (
+                                            <option key={topic} value={topic}>
+                                                {topic}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label
+                                        htmlFor="year"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
+                                        Year
+                                    </label>
+                                    <select
+                                        id="year"
+                                        name="year"
+                                        value={filters.year}
+                                        onChange={handleFilterChange}
+                                        className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                                    >
+                                        <option value="">All Years</option>
+                                        {availableYears.map((year) => (
+                                            <option key={year} value={year}>
+                                                {year}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-3 items-center">
+                                <label className="inline-flex items-center text-sm text-gray-700">
+                                    <input
+                                        type="checkbox"
+                                        className="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2"
+                                        checked={isRandom}
+                                        onChange={(e) => setIsRandom(e.target.checked)}
+                                    />
+                                    Random order
+                                </label>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className="text-gray-700">Question limit (optional):</span>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        value={questionLimit}
+                                        onChange={(e) => setQuestionLimit(e.target.value)}
+                                        className="w-20 border border-gray-300 rounded-md p-1 text-sm"
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
 
-            {quizState.questions.length > 0 && !quizState.submitted && (
-                <div className="max-w-3xl mx-auto">
-                    <div className="mb-4">
-                        <span className="text-gray-600">
-                            Total Questions: {quizState.questions.length}
+            {dataSource === 'upload' && (
+                <div className="max-w-md mx-auto mb-6 bg-white rounded-lg shadow-md p-4">
+                    <h2 className="text-lg font-semibold mb-3">Upload Quiz CSV</h2>
+                    <input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleUploadedCsv}
+                        className="w-full p-2 border border-gray-300 rounded text-sm"
+                        disabled={isLoading}
+                    />
+                    {isLoading && (
+                        <p className="mt-2 text-blue-600 text-sm">Parsing uploaded CSV...</p>
+                    )}
+                    {error && <p className="mt-2 text-red-600 text-sm">{error}</p>}
+                    {!isLoading && !error && allQuestions.length > 0 && (
+                        <p className="mt-2 text-sm text-gray-700">
+                            Loaded {allQuestions.length} questions from uploaded CSV.
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {dataSource !== null && (
+                <div className="max-w-3xl mx-auto mb-8 flex justify-center">
+                    <button
+                        type="button"
+                        onClick={startQuiz}
+                        disabled={isLoading || (dataSource === 'upload' && !allQuestions.length)}
+                        className="px-6 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                        Start Quiz
+                    </button>
+                </div>
+            )}
+
+            {!quizState.submitted && currentQuestion && (
+                <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
+                    <div className="mb-4 flex justify-between items-baseline">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                            Question {quizState.currentIndex + 1} of {totalQuestions}
+                        </h2>
+                        <span className="text-xs text-gray-500">
+                            ID: {currentQuestion.id}{' '}
+                            {currentQuestion.paper && `| ${currentQuestion.paper}`}{' '}
+                            {currentQuestion.year && `(${currentQuestion.year})`}
                         </span>
                     </div>
 
-                    {quizState.questions.map((question, index) => (
-                        <div key={index} className="bg-white rounded-lg shadow-md p-6 mb-6">
-                            <div className="mb-4">
-                                <span className="text-gray-600">Question {index + 1}</span>
-                                {question.passage && (
-                                    <div className="mt-2 p-4 bg-gray-50 rounded">
-                                        <p className="font-semibold mb-2">Passage:</p>
-                                        <p className="whitespace-pre-line">{question.passage}</p>
-                                    </div>
-                                )}
-                                <p className="mt-2 text-lg whitespace-pre-line">{question.question}</p>
-                            </div>
-
-                            <div className="space-y-3">
-                                {['A', 'B', 'C', 'D'].map((option) => {
-                                    const optionKey = `option_${option.toLowerCase()}` as keyof QuizQuestion;
-                                    const isSelected = quizState.selectedAnswers[index] === option;
-                                    
-                                    return (
-                                        <button
-                                            key={option}
-                                            onClick={() => handleAnswerSelect(index, option)}
-                                            className={`w-full p-3 text-left rounded border transition-colors ${
-                                                isSelected
-                                                    ? 'bg-indigo-100 border-indigo-400'
-                                                    : 'bg-white border-gray-300 hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            <span className="font-bold mr-2">{option})</span>
-                                            <span className="whitespace-pre-line">{question[optionKey]}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                    {currentQuestion.passage && (
+                        <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-700">
+                            <p className="font-semibold mb-1">Passage</p>
+                            <p className="whitespace-pre-line">
+                                {formatText(currentQuestion.passage)}
+                            </p>
                         </div>
-                    ))}
+                    )}
 
-                    <div className="sticky bottom-0 bg-white py-4 border-t border-gray-200 shadow-lg">
-                        <div className="max-w-3xl mx-auto px-4 flex justify-between items-center">
-                            <span className="text-gray-600">
-                                Selected Answers: {Object.keys(quizState.selectedAnswers).length} of {quizState.questions.length}
-                            </span>
+                    {currentQuestion.image_url && (
+                        <div className="mb-4 text-center">
+                            <img
+                                src={`/${currentQuestion.image_url}`}
+                                alt="Question related"
+                                className="inline-block max-w-full h-auto rounded border border-gray-200"
+                            />
+                        </div>
+                    )}
+
+                    <p className="mb-4 text-base text-gray-900 whitespace-pre-line">
+                        {formatText(currentQuestion.question)}
+                    </p>
+
+                    <div className="space-y-3 mb-6">
+                        {(['A', 'B', 'C', 'D'] as const).map((letter) => {
+                            const optionKey = `option_${letter.toLowerCase()}` as keyof Question;
+                            const optionText = currentQuestion[optionKey];
+                            const isSelected =
+                                quizState.selectedAnswers[quizState.currentIndex] === letter;
+                            return (
+                                <button
+                                    key={letter}
+                                    type="button"
+                                    onClick={() => handleAnswerSelect(letter)}
+                                    className={`w-full text-left p-3 rounded border text-sm transition-colors ${
+                                        isSelected
+                                            ? 'bg-indigo-100 border-indigo-400'
+                                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <span className="font-bold mr-2">{letter})</span>
+                                    <span className="whitespace-pre-line">
+                                        {formatText(optionText ?? '')}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                        <button
+                            type="button"
+                            onClick={goToPrevious}
+                            disabled={quizState.currentIndex === 0}
+                            className="px-4 py-2 rounded-md border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Previous
+                        </button>
+                        <span className="text-sm text-gray-600">
+                            Answered {Object.keys(quizState.selectedAnswers).length} of{' '}
+                            {totalQuestions}
+                        </span>
+                        {quizState.currentIndex === totalQuestions - 1 ? (
                             <button
-                                onClick={handleSubmit}
-                                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                type="button"
+                                onClick={submitQuiz}
+                                className="px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
                             >
                                 Submit Quiz
                             </button>
-                        </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={goToNext}
+                                className="px-4 py-2 rounded-md border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                Next
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
 
             {quizState.submitted && (
-                <div className="max-w-3xl mx-auto">
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-0 z-10">
-                        <h2 className="text-2xl font-bold mb-4">Quiz Results</h2>
-                        <p className="text-lg mb-4">
-                            Score: {quizState.score} out of {quizState.questions.length}
-                            ({((quizState.score / quizState.questions.length) * 100).toFixed(1)}%)
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h2 className="text-2xl font-bold mb-2">Quiz Results</h2>
+                        <p className="text-lg mb-1">
+                            Score: {quizState.score} / {totalQuestions}
                         </p>
-                        <button
-                            onClick={handleSaveQuiz}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                        >
-                            Save Quiz Results
-                        </button>
+                        <p className="text-gray-700">Percentage: {percentage}%</p>
                     </div>
 
-                    <div className="mt-8">
-                        {quizState.questions.map((question, index) => (
-                            <div key={index} className="bg-white rounded-lg shadow-md p-6 mb-6">
-                                <div className="mb-4">
-                                    <span className="text-gray-600">Question {index + 1}</span>
+                    <div className="space-y-4">
+                        {quizState.questions.map((question, index) => {
+                            const selected = quizState.selectedAnswers[index];
+                            const correctLetter = question.correct_option
+                                ? question.correct_option.toUpperCase()
+                                : null;
+                            return (
+                                <div
+                                    key={question.id}
+                                    className="bg-white rounded-lg shadow-md p-5"
+                                >
+                                    <div className="mb-3 flex justify-between items-baseline">
+                                        <h3 className="text-base font-semibold text-gray-800">
+                                            Question {index + 1}
+                                        </h3>
+                                        <span className="text-xs text-gray-500">
+                                            ID: {question.id}{' '}
+                                            {question.paper && `| ${question.paper}`}{' '}
+                                            {question.year && `(${question.year})`}
+                                        </span>
+                                    </div>
                                     {question.passage && (
-                                        <div className="mt-2 p-4 bg-gray-50 rounded">
-                                            <p className="font-semibold mb-2">Passage:</p>
-                                            <p className="whitespace-pre-line">{question.passage}</p>
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-700">
+                                            <p className="font-semibold mb-1">Passage</p>
+                                            <p className="whitespace-pre-line">
+                                                {formatText(question.passage)}
+                                            </p>
                                         </div>
                                     )}
-                                    <p className="mt-2 text-lg">{question.question}</p>
-                                </div>
+                                    {question.image_url && (
+                                        <div className="mb-3 text-center">
+                                            <img
+                                                src={`/${question.image_url}`}
+                                                alt="Question related"
+                                                className="inline-block max-w-full h-auto rounded border border-gray-200"
+                                            />
+                                        </div>
+                                    )}
+                                    <p className="mb-3 text-sm text-gray-900 whitespace-pre-line">
+                                        {formatText(question.question)}
+                                    </p>
+                                    <div className="space-y-2 mb-3">
+                                        {(['A', 'B', 'C', 'D'] as const).map((letter) => {
+                                            const optionKey =
+                                                `option_${letter.toLowerCase()}` as keyof Question;
+                                            const optionText = question[optionKey];
+                                            const isCorrect = correctLetter === letter;
+                                            const isSelected = selected === letter;
 
-                                <div className="space-y-2">
-                                    {['A', 'B', 'C', 'D'].map((option) => {
-                                        const optionKey = `option_${option.toLowerCase()}` as keyof QuizQuestion;
-                                        const isSelected = quizState.selectedAnswers[index] === option;
-                                        const isCorrect = question.correct_option?.toUpperCase() === option;
+                                            let classes =
+                                                'p-2 rounded border text-sm whitespace-pre-line';
+                                            if (isCorrect) {
+                                                classes += ' bg-green-100 border-green-400';
+                                            } else if (isSelected && !isCorrect) {
+                                                classes += ' bg-red-100 border-red-400';
+                                            } else {
+                                                classes += ' bg-white border-gray-300';
+                                            }
 
-                                        return (
-                                            <div
-                                                key={option}
-                                                className={`p-3 rounded border ${
-                                                    isCorrect
-                                                        ? 'bg-green-100 border-green-400'
-                                                        : isSelected
-                                                        ? 'bg-red-100 border-red-400'
-                                                        : 'bg-white border-gray-300'
-                                                }`}
-                                            >
-                                                <span className="font-bold mr-2">{option})</span>
-                                                {question[optionKey]}
-                                                {isCorrect && <span className="ml-2 text-green-600">✓</span>}
-                                                {isSelected && !isCorrect && <span className="ml-2 text-red-600">✗</span>}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {question.explanation && (
-                                    <div className="mt-4 p-4 bg-blue-50 rounded">
-                                        <p className="font-semibold text-blue-800 mb-2">Explanation:</p>
-                                        <p className="text-gray-700">{question.explanation}</p>
+                                            return (
+                                                <div key={letter} className={classes}>
+                                                    <span className="font-bold mr-2">
+                                                        {letter})
+                                                    </span>
+                                                    {formatText(optionText ?? '')}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                )}
-                            </div>
-                        ))}
+                                    {question.explanation && (
+                                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                                            <p className="font-semibold text-blue-800 mb-1 text-sm">
+                                                Explanation
+                                            </p>
+                                            <p className="text-sm text-gray-700 whitespace-pre-line">
+                                                {formatText(question.explanation)}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -280,4 +871,4 @@ const Quiz: React.FC = () => {
     );
 };
 
-export default Quiz; 
+export default Quiz;
