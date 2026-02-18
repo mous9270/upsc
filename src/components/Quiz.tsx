@@ -169,7 +169,7 @@ useEffect(() => {
     const listener = App.addListener('backButton', ({ canGoBack }) => {
         const currentPath = window.location.pathname;
         if (currentPath === '/quiz') {
-            navigate('/home');
+            navigate('/');
         } else if (canGoBack) {
             window.history.back();
         } else {
