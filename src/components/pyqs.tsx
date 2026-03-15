@@ -449,315 +449,539 @@ const Pyqs: React.FC = () => {
 
     // --- Render Logic ---
     return (
-        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-            <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h1 className="text-2xl sm:text-3xl font-bold text-left text-gray-800">
-                    UPSC PYQs Practice
-                </h1>
+        <>
+            {/* ─── Google Fonts import ─── */}
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
 
-                {/* Quiz, About & Download Buttons */}
-                <div className="flex flex-wrap justify-start sm:justify-end gap-2 sm:gap-3">
-                    <a
-                        href="https://play.google.com/store/apps/details?id=com.upscpyqs.app"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 sm:px-4 py-2 border border-green-600 text-green-700 rounded-md bg-white hover:bg-green-50 hover:border-green-700 transition-colors text-xs sm:text-sm font-medium"
-                    >
-                        Download Android App
-                    </a>
-                    <a
-                        href="/about"
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md bg-white hover:bg-gray-50 transition-colors text-sm sm:text-base"
-                    >
-                        About Me
-                    </a>
-                    <a
-                        href="/quiz"
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm sm:text-base"
-                    >
-                        Take Quiz
-                    </a>
-                </div>
-            </div>
+                :root {
+                    --saffron:   #1A56A0;
+                    --saffron-lt:#E8F0FA;
+                    --ink:       #111827;
+                    --ink-muted: #4B5563;
+                    --paper:     #F7F9FC;
+                    --paper-alt: #EEF2F8;
+                    --border:    #D1DCF0;
+                    --green:     #2E7D52;
+                    --green-lt:  #EAF5EF;
+                    --red:       #B83232;
+                    --red-lt:    #FCEAEA;
+                    --blue:      #1A56A0;
+                    --blue-lt:   #E8F0FA;
+                }
 
-            {/* Filter Section - Now Collapsible */}
-            <div className="mb-4 sm:mb-8 border rounded-lg shadow-md bg-white">
-                <button
-                    onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-                    className="w-full p-3 sm:p-4 flex justify-between items-center text-left"
-                >
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-700">Select Filters</h2>
-                    <span className="text-gray-500">
-                        {isFiltersOpen ? '▼' : '▶'}
-                    </span>
-                </button>
+                body { background: var(--paper); color: var(--ink); }
 
-                <div className={`transition-all duration-300 ease-in-out ${isFiltersOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                    <div className="p-3 sm:p-4 border-t">
-                        {isLoadingCsv && <p className="text-center text-blue-600">Loading question data...</p>}
-                        {!isLoadingCsv && csvError && <p className="text-center text-red-600 bg-red-100 p-2 sm:p-3 rounded border border-red-300">Error: {csvError}</p>}
-                        {!isLoadingCsv && !csvError && allQuestions.length === 0 && (
-                            <p className="text-center text-gray-500">No question data found. Please check the `upscpyqs.csv` file.</p>
-                        )}
-                        {!isLoadingCsv && !csvError && allQuestions.length > 0 && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                {/* Paper */}
-                                <div>
-                                    <label htmlFor="paper" className="block text-sm font-medium text-gray-600 mb-1">Paper</label>
-                                    <select id="paper" name="paper" value={filters.paper} onChange={handleFilterChange} 
-                                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm">
-                                        {renderSelectOptions(availablePapers, 'All Papers')}
-                                    </select>
-                                </div>
-                                {/* Subject */}
-                                <div>
-                                    <label htmlFor="subject" className="block text-sm font-medium text-gray-600 mb-1">Subject</label>
-                                    <select
-                                        id="subject" name="subject" value={filters.subject} onChange={handleFilterChange}
-                                        disabled={availableSubjects.length === 0}
-                                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm disabled:bg-gray-100"
-                                    >
-                                        {renderSelectOptions(availableSubjects, filters.paper ? 'All Subjects for Paper' : 'All Subjects')}
-                                    </select>
-                                </div>
-                                {/* Topic */}
-                                <div>
-                                    <label htmlFor="topic" className="block text-sm font-medium text-gray-600 mb-1">Topic</label>
-                                    <select
-                                        id="topic" name="topic" value={filters.topic} onChange={handleFilterChange}
-                                        disabled={availableTopics.length === 0}
-                                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm disabled:bg-gray-100"
-                                    >
-                                        {renderSelectOptions(availableTopics, filters.subject ? 'All Topics for Subject' : 'All Topics')}
-                                    </select>
-                                </div>
-                                {/* Year */}
-                                <div>
-                                    <label htmlFor="year" className="block text-sm font-medium text-gray-600 mb-1">Year</label>
-                                    <select id="year" name="year" value={filters.year} onChange={handleFilterChange} 
-                                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm">
-                                        {renderSelectOptions(availableYears, 'All Years')}
-                                    </select>
-                                </div>
-                            </div>
-                        )}
+                /* ── Title ── */
+                .page-title {
+                    font-family: 'Playfair Display', serif;
+                    font-size: clamp(1.7rem, 5vw, 2.6rem);
+                    font-weight: 900;
+                    color: var(--ink);
+                    letter-spacing: -0.02em;
+                    line-height: 1.1;
+                }
+                .page-title span {
+                    color: var(--saffron);
+                }
+                .page-subtitle {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.78rem;
+                    font-weight: 500;
+                    letter-spacing: 0.18em;
+                    text-transform: uppercase;
+                    color: var(--ink-muted);
+                    margin-bottom: 0.35rem;
+                }
+
+                /* ── Shared button base ── */
+                .btn {
+                    font-family: 'DM Sans', sans-serif;
+                    font-weight: 600;
+                    font-size: 0.82rem;
+                    letter-spacing: 0.04em;
+                    border-radius: 6px;
+                    padding: 0.5rem 1.1rem;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.35rem;
+                    cursor: pointer;
+                    transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.1s;
+                    white-space: nowrap;
+                    border: 1.5px solid transparent;
+                    text-decoration: none;
+                }
+                .btn:active { transform: translateY(1px); }
+
+                /* Primary — saffron fill */
+                .btn-primary {
+                    background: var(--saffron);
+                    color: #fff;
+                    border-color: var(--saffron);
+                    box-shadow: 0 2px 8px rgba(26,86,160,0.22);
+                }
+                .btn-primary:hover {
+                    background: #133F7A;
+                    border-color: #133F7A;
+                    box-shadow: 0 4px 14px rgba(26,86,160,0.32);
+                }
+
+                /* Secondary — outlined ink */
+                .btn-secondary {
+                    background: transparent;
+                    color: var(--ink);
+                    border-color: var(--border);
+                }
+                .btn-secondary:hover {
+                    background: var(--paper-alt);
+                    border-color: var(--ink-muted);
+                }
+
+                /* Ghost green — Android download */
+                .btn-ghost-green {
+                    background: var(--green-lt);
+                    color: var(--green);
+                    border-color: #A8D5BC;
+                }
+                .btn-ghost-green:hover {
+                    background: #D6EFE3;
+                    border-color: var(--green);
+                }
+
+                /* Nav arrows */
+                .btn-nav {
+                    background: var(--paper-alt);
+                    color: var(--ink);
+                    border-color: var(--border);
+                    font-size: 0.88rem;
+                    padding: 0.5rem 1.3rem;
+                }
+                .btn-nav:hover:not(:disabled) {
+                    background: var(--saffron-lt);
+                    border-color: var(--saffron);
+                    color: var(--saffron);
+                }
+                .btn-nav:disabled {
+                    opacity: 0.38;
+                    cursor: not-allowed;
+                }
+
+                /* Submit */
+                .btn-submit {
+                    background: var(--blue);
+                    color: #fff;
+                    border-color: var(--blue);
+                    padding: 0.5rem 1.6rem;
+                    box-shadow: 0 2px 8px rgba(26,86,160,0.2);
+                }
+                .btn-submit:hover:not(:disabled) {
+                    background: #133F7A;
+                    border-color: #133F7A;
+                }
+                .btn-submit:disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                }
+                .btn-submit-done {
+                    background: var(--paper-alt);
+                    color: var(--ink-muted);
+                    border-color: var(--border);
+                    cursor: not-allowed;
+                    opacity: 0.75;
+                }
+
+                /* Small utility */
+                .btn-sm {
+                    font-size: 0.76rem;
+                    padding: 0.35rem 0.8rem;
+                }
+
+                /* ── Card / surface ── */
+                .card {
+                    background: #fff;
+                    border: 1px solid var(--border);
+                    border-radius: 10px;
+                    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+                }
+
+                /* ── Divider rule under title ── */
+                .title-rule {
+                    width: 3rem;
+                    height: 3px;
+                    background: var(--saffron);
+                    border-radius: 2px;
+                    margin-top: 0.6rem;
+                }
+            `}</style>
+
+            <div
+                className="container mx-auto px-3 sm:px-5 py-3 sm:py-5"
+                style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)',
+                    paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)',
+                }}
+            >
+                {/* ── Header ── */}
+                <div className="mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div>
+                        <p className="page-subtitle">Civil Services Examination</p>
+                        <h1 className="page-title">
+                            UPSC&nbsp;<span>PYQs</span>&nbsp;Practice
+                        </h1>
+                        <div className="title-rule" />
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap gap-2">
+                        <a
+                            href="https://play.google.com/store/apps/details?id=com.upscpyqs.app"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-ghost-green"
+                        >
+                            {/* Android icon */}
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.34a1 1 0 0 1-1 1H7.477a1 1 0 0 1-1-1V8.66a1 1 0 0 1 1-1h9.046a1 1 0 0 1 1 1v6.68zM14.86 2.19l1.09-1.89a.25.25 0 0 0-.43-.25l-1.1 1.91A6.94 6.94 0 0 0 12 1.6c-.85 0-1.67.13-2.44.36L8.46.05a.25.25 0 0 0-.43.25L9.1 2.19A7.01 7.01 0 0 0 5 8.5h14a7.01 7.01 0 0 0-4.14-6.31zM9.5 6a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5zm5 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5z"/></svg>
+                            Android App
+                        </a>
+                        <a href="/about" className="btn btn-secondary">
+                            About Me
+                        </a>
+                        <a href="/quiz" className="btn btn-primary">
+                            {/* Quiz icon */}
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            Take Quiz
+                        </a>
                     </div>
                 </div>
-            </div>
 
-            {/* Search and Random Section */}
-            <div className={`mb-4 sm:mb-6 p-3 sm:p-4 border rounded-lg shadow-md bg-white flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 ${isLoadingCsv || csvError ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div className="w-full sm:w-1/2 lg:w-2/3">
-                    <label htmlFor="search" className="sr-only">Search Questions</label>
-                    <input
-                        type="text" id="search" placeholder="Search..." value={searchTerm} onChange={handleSearchChange}
-                        className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm"
-                        disabled={isLoadingCsv || !!csvError || allQuestions.length === 0}
-                    />
-                </div>
-                <div className="flex items-center w-full sm:w-auto">
-                    <input
-                        type="checkbox" id="random" checked={isRandom} onChange={handleRandomToggle}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2"
-                        disabled={isLoadingCsv || !!csvError || allQuestions.length === 0}
-                    />
-                    <label htmlFor="random" className="text-sm sm:text-base font-medium text-gray-700">Random Order</label>
-                </div>
-            </div>
-
-            {/* No Matching Questions Message */}
-            {!isLoadingCsv && !csvError && allQuestions.length > 0 && displayedQuestions.length === 0 && (
-                <p className="text-center text-base sm:text-lg text-gray-500 my-6 sm:my-8">No questions found matching your criteria.</p>
-            )}
-
-            {/* Single Question Display Area */}
-            {!isLoadingCsv && !csvError && currentQuestion && (
-                <div className="my-4 sm:my-8 p-3 sm:p-6 border rounded-lg shadow-lg bg-white">
-                    {/* Jump To Section */}
-                    <div className="mb-3 sm:mb-4 flex flex-wrap items-center justify-end gap-2 text-xs sm:text-sm">
-                        <label htmlFor="jumpTo">Go to:</label>
-                        <input
-                            type="number" id="jumpTo" min="1" max={totalFilteredQuestions} value={jumpToInput}
-                            onChange={handleJumpInputChange}
-                            onKeyDown={(e) => e.key === 'Enter' && handleJumpTo()}
-                            className="w-14 sm:w-16 p-1 border border-gray-300 rounded-md text-center"
-                            disabled={totalFilteredQuestions <= 1}
-                        />
-                        <button
-                            onClick={handleJumpTo}
-                            className="px-2 sm:px-3 py-1 border border-gray-300 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={totalFilteredQuestions <= 1 || !jumpToInput}
-                        > Go </button>
-                        <span className="mx-1 sm:mx-2">|</span>
-                        <label htmlFor="id">Search ID:</label>
-                        <input
-                            type="number"
-                            id="id"
-                            name="id"
-                            value={filters.id}
-                            onChange={handleFilterChange}
-                            placeholder="ID"
-                            className="w-14 sm:w-16 p-1 border border-gray-300 rounded-md text-center"
-                        />
-                    </div>
-
-                    {/* Question Header */}
-                    <div className="mb-3 sm:mb-4 pb-2 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1">
-                        <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-                            Question {currentIndex + 1} of {totalFilteredQuestions}
-                        </h2>
-                        <span className="text-xs text-gray-500">
-                            ID: {currentQuestion.id} | {currentQuestion.paper ?? 'N/A'} {currentQuestion.year && `(${currentQuestion.year})`}
+                {/* Filter Section - Collapsible */}
+                <div className="card mb-4 sm:mb-6">
+                    <button
+                        onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                        className="w-full p-3 sm:p-4 flex justify-between items-center text-left"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink)' }}>
+                            ⚙ Select Filters
                         </span>
-                    </div>
+                        <span style={{ color: 'var(--ink-muted)', fontSize: '0.75rem' }}>
+                            {isFiltersOpen ? '▼' : '▶'}
+                        </span>
+                    </button>
 
-                    {/* Passage */}
-                    {currentQuestion.passage && (
-                        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gray-50 border border-gray-200 rounded text-xs sm:text-sm text-gray-700">
-                            <p className="font-semibold mb-1">Passage:</p>
-                            <p className="whitespace-pre-line">{formatText(currentQuestion.passage)}</p>
+                    <div className={`transition-all duration-300 ease-in-out ${isFiltersOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                        <div className="p-3 sm:p-4" style={{ borderTop: '1px solid var(--border)' }}>
+                            {isLoadingCsv && <p className="text-center" style={{ color: 'var(--blue)' }}>Loading question data…</p>}
+                            {!isLoadingCsv && csvError && (
+                                <p className="text-center p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid #F4BCBC' }}>
+                                    Error: {csvError}
+                                </p>
+                            )}
+                            {!isLoadingCsv && !csvError && allQuestions.length === 0 && (
+                                <p className="text-center" style={{ color: 'var(--ink-muted)' }}>No question data found. Please check the `upscpyqs.csv` file.</p>
+                            )}
+                            {!isLoadingCsv && !csvError && allQuestions.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                    {[
+                                        { id: 'paper', label: 'Paper', options: availablePapers, placeholder: 'All Papers' },
+                                        { id: 'subject', label: 'Subject', options: availableSubjects, placeholder: filters.paper ? 'All Subjects for Paper' : 'All Subjects', disabled: availableSubjects.length === 0 },
+                                        { id: 'topic', label: 'Topic', options: availableTopics, placeholder: filters.subject ? 'All Topics for Subject' : 'All Topics', disabled: availableTopics.length === 0 },
+                                        { id: 'year', label: 'Year', options: availableYears, placeholder: 'All Years' },
+                                    ].map(({ id, label, options, placeholder, disabled }) => (
+                                        <div key={id}>
+                                            <label htmlFor={id} style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-muted)', marginBottom: '0.3rem' }}>
+                                                {label}
+                                            </label>
+                                            <select
+                                                id={id}
+                                                name={id}
+                                                value={(filters as any)[id]}
+                                                onChange={handleFilterChange}
+                                                disabled={disabled}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '0.45rem 0.7rem',
+                                                    fontSize: '0.85rem',
+                                                    border: '1.5px solid var(--border)',
+                                                    borderRadius: '6px',
+                                                    background: disabled ? 'var(--paper-alt)' : '#fff',
+                                                    color: 'var(--ink)',
+                                                    fontFamily: "'DM Sans', sans-serif",
+                                                    cursor: disabled ? 'not-allowed' : 'pointer',
+                                                }}
+                                            >
+                                                {renderSelectOptions(options, placeholder ?? '')}
+                                            </select>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
+                </div>
 
-                    {/* Image (Optional Display) */}
-                    {currentQuestion.image_url && (
-                        <div className="mb-3 sm:mb-4 text-center">
-                            <img
-                                src={`/${currentQuestion.image_url}`}
-                                alt="Question related image"
-                                className="max-w-full h-auto inline-block rounded border border-gray-200"
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.onerror = null;
-                                    target.style.display = 'none';
-                                    const errorMsg = document.createElement('p');
-                                    errorMsg.textContent = 'Image failed to load.';
-                                    errorMsg.className = 'text-red-500 text-xs sm:text-sm italic';
-                                    target.parentNode?.insertBefore(errorMsg, target.nextSibling);
+                {/* Search and Random Section */}
+                <div
+                    className={`card mb-4 sm:mb-6 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-3 ${isLoadingCsv || csvError ? 'opacity-50 pointer-events-none' : ''}`}
+                >
+                    <div className="w-full sm:w-1/2 lg:w-2/3" style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-muted)', pointerEvents: 'none' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </span>
+                        <input
+                            type="text"
+                            id="search"
+                            placeholder="Search questions, options, explanations…"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            disabled={isLoadingCsv || !!csvError || allQuestions.length === 0}
+                            style={{
+                                width: '100%',
+                                padding: '0.48rem 0.75rem 0.48rem 2.1rem',
+                                fontSize: '0.85rem',
+                                border: '1.5px solid var(--border)',
+                                borderRadius: '6px',
+                                fontFamily: "'DM Sans', sans-serif",
+                                color: 'var(--ink)',
+                                background: '#fff',
+                            }}
+                        />
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                        <input
+                            type="checkbox"
+                            id="random"
+                            checked={isRandom}
+                            onChange={handleRandomToggle}
+                            disabled={isLoadingCsv || !!csvError || allQuestions.length === 0}
+                            style={{ accentColor: 'var(--saffron)', width: '1rem', height: '1rem' }}
+                        />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink)' }}>Random Order</span>
+                    </label>
+                </div>
+
+                {/* No Matching Questions Message */}
+                {!isLoadingCsv && !csvError && allQuestions.length > 0 && displayedQuestions.length === 0 && (
+                    <p className="text-center my-8" style={{ color: 'var(--ink-muted)' }}>No questions found matching your criteria.</p>
+                )}
+
+                {/* Single Question Display Area */}
+                {!isLoadingCsv && !csvError && currentQuestion && (
+                    <div className="card my-4 sm:my-6 p-3 sm:p-6">
+                        {/* Jump To Section */}
+                        <div className="mb-3 flex flex-wrap items-center justify-end gap-2" style={{ fontSize: '0.8rem', color: 'var(--ink-muted)' }}>
+                            <label htmlFor="jumpTo">Go to:</label>
+                            <input
+                                type="number"
+                                id="jumpTo"
+                                min="1"
+                                max={totalFilteredQuestions}
+                                value={jumpToInput}
+                                onChange={handleJumpInputChange}
+                                onKeyDown={(e) => e.key === 'Enter' && handleJumpTo()}
+                                disabled={totalFilteredQuestions <= 1}
+                                style={{
+                                    width: '3.5rem',
+                                    padding: '0.28rem 0.4rem',
+                                    border: '1.5px solid var(--border)',
+                                    borderRadius: '5px',
+                                    textAlign: 'center',
+                                    fontSize: '0.8rem',
+                                    fontFamily: "'DM Sans', sans-serif",
+                                }}
+                            />
+                            <button
+                                onClick={handleJumpTo}
+                                disabled={totalFilteredQuestions <= 1 || !jumpToInput}
+                                className="btn btn-secondary btn-sm"
+                            >
+                                Go
+                            </button>
+                            <span style={{ color: 'var(--border)' }}>|</span>
+                            <label htmlFor="id">ID:</label>
+                            <input
+                                type="number"
+                                id="id"
+                                name="id"
+                                value={filters.id}
+                                onChange={handleFilterChange}
+                                placeholder="—"
+                                style={{
+                                    width: '3.5rem',
+                                    padding: '0.28rem 0.4rem',
+                                    border: '1.5px solid var(--border)',
+                                    borderRadius: '5px',
+                                    textAlign: 'center',
+                                    fontSize: '0.8rem',
+                                    fontFamily: "'DM Sans', sans-serif",
                                 }}
                             />
                         </div>
-                    )}
 
-                    {/* Question Text */}
-                    <p className="mb-4 sm:mb-5 text-base sm:text-lg text-gray-900 whitespace-pre-line">{formatText(currentQuestion.question) ?? 'Question text missing'}</p>
+                        {/* Question Header */}
+                        <div className="mb-3 pb-3 flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1" style={{ borderBottom: '1px solid var(--border)' }}>
+                            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.1rem', fontWeight: 700, color: 'var(--ink)' }}>
+                                Question {currentIndex + 1}
+                                <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--ink-muted)', marginLeft: '0.5rem' }}>of {totalFilteredQuestions}</span>
+                            </h2>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', background: 'var(--paper-alt)', padding: '0.18rem 0.6rem', borderRadius: '20px', border: '1px solid var(--border)' }}>
+                                ID {currentQuestion.id} &nbsp;·&nbsp; {currentQuestion.paper ?? 'N/A'} {currentQuestion.year && `· ${currentQuestion.year}`}
+                            </span>
+                        </div>
 
-                    {/* Options */}
-                    <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-                        {(['A', 'B', 'C', 'D'] as const).map(optLetter => {
-                            const optionKey = `option_${optLetter.toLowerCase()}` as keyof Question;
-                            const optionText = currentQuestion[optionKey] != null ? formatText(String(currentQuestion[optionKey])) : `Option ${optLetter} missing`;
-                            const isSelected = selectedOption === optLetter;
-                            const isCorrect = currentQuestion.correct_option?.toUpperCase() === optLetter;
-
-                            let optionClasses = "p-2 sm:p-3 rounded border transition-colors flex items-start text-sm sm:text-base";
-                            if (isCurrentSubmitted) {
-                                optionClasses += " cursor-not-allowed";
-                                if (isCorrect) optionClasses += " bg-green-100 border-green-400 text-green-800";
-                                else if (isSelected) optionClasses += " bg-red-100 border-red-400 text-red-800";
-                                else optionClasses += " bg-gray-50 border-gray-200 opacity-75 text-gray-700";
-                            } else {
-                                optionClasses += " cursor-pointer";
-                                optionClasses += isSelected
-                                    ? " bg-indigo-100 border-indigo-400 ring-2 ring-indigo-300 text-indigo-900"
-                                    : " bg-white border-gray-300 hover:bg-gray-50 text-gray-800";
-                            }
-
-                            return (
-                                <div key={optLetter} className={optionClasses} onClick={() => handleOptionSelect(optLetter)}>
-                                    <span className="font-bold mr-2 sm:mr-3">{optLetter})</span>
-                                    <span className="whitespace-pre-line flex-1">{optionText}</span>
-                                    {isCurrentSubmitted && isCorrect && <span className="ml-auto pl-2 font-bold text-green-600">✓</span>}
-                                    {isCurrentSubmitted && isSelected && !isCorrect && <span className="ml-auto pl-2 font-bold text-red-600">✗</span>}
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Explanation */}
-                    {isCurrentSubmitted && (
-                        currentQuestion.explanation ? (
-                            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded">
-                                <h3 className="font-semibold text-blue-800 mb-1 sm:mb-2 text-sm sm:text-base">Explanation:</h3>
-                                <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-line">{formatText(currentQuestion.explanation)}</p>
+                        {/* Passage */}
+                        {currentQuestion.passage && (
+                            <div className="mb-3 p-3 rounded" style={{ background: 'var(--paper-alt)', border: '1px solid var(--border)', fontSize: '0.85rem', color: 'var(--ink)' }}>
+                                <p style={{ fontWeight: 600, marginBottom: '0.3rem', color: 'var(--saffron)', fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Passage</p>
+                                <p className="whitespace-pre-line">{formatText(currentQuestion.passage)}</p>
                             </div>
-                        ) : (
-                            <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500 italic">No explanation available.</p>
-                        )
-                    )}
+                        )}
 
-                    {/* Navigation Buttons */}
-                    <div className="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
-                        <button
-                            onClick={handlePrevious} disabled={currentIndex === 0}
-                            className="w-full sm:w-auto px-4 sm:px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                        > &larr; Previous </button>
-                        <button
-                            onClick={handleSubmit} disabled={selectedOption === null || isCurrentSubmitted}
-                            className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-indigo-400"
-                        > {isCurrentSubmitted ? 'Answer Submitted' : 'Submit Answer'} </button>
-                        <button
-                            onClick={handleNext} disabled={currentIndex === totalFilteredQuestions - 1}
-                            className="w-full sm:w-auto px-4 sm:px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                        > Next &rarr; </button>
-                    </div>
-                </div>
-            )}
+                        {/* Image */}
+                        {currentQuestion.image_url && (
+                            <div className="mb-3 text-center">
+                                <img
+                                    src={`/${currentQuestion.image_url}`}
+                                    alt="Question related image"
+                                    className="max-w-full h-auto inline-block rounded"
+                                    style={{ border: '1px solid var(--border)' }}
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.onerror = null;
+                                        target.style.display = 'none';
+                                        const errorMsg = document.createElement('p');
+                                        errorMsg.textContent = 'Image failed to load.';
+                                        errorMsg.className = 'text-red-500 text-xs italic';
+                                        target.parentNode?.insertBefore(errorMsg, target.nextSibling);
+                                    }}
+                                />
+                            </div>
+                        )}
 
-            {/* Footer Section */}
-            <div className="mt-8 border-t border-gray-200">
-                <button
-                    onClick={() => setIsFooterOpen(!isFooterOpen)}
-                    className="w-full p-4 flex justify-between items-center text-left text-sm text-gray-600 hover:bg-gray-50"
-                >
-                    <span className="font-medium">About & Contact</span>
-                    <span className="text-gray-500">
-                        {isFooterOpen ? '▼' : '▶'}
-                    </span>
-                </button>
-
-                <div className={`transition-all duration-300 ease-in-out ${isFooterOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                    <div className="p-4 text-sm text-gray-500">
-                        <p className="mb-3 max-w-2xl">
-                        Disclaimer: This app is not affiliated with, associated with, endorsed by, or in any way officially connected with the Union Public Service Commission (UPSC).
-                        <br />
-                        Source of Information: The previous year questions provided in this app are sourced from the official UPSC website:https://upsc.gov.in/examinations/previous-question-papers
-                        <br />
-                        Note: Explanations on this platform are contributed by users for educational purposes. If you believe any content infringes copyright, please contact us and we will remove it promptly.
-
-
+                        {/* Question Text */}
+                        <p className="mb-4 whitespace-pre-line" style={{ fontSize: '1rem', color: 'var(--ink)', lineHeight: 1.65 }}>
+                            {formatText(currentQuestion.question) ?? 'Question text missing'}
                         </p>
-                        <div className="mb-3 space-y-1">
-                            <p className="text-gray-600 font-medium">Contact us:</p>
-                            <p>Email: upscpreviousquestions@gmail.com</p>
+
+                        {/* Options */}
+                        <div className="space-y-2 mb-5">
+                            {(['A', 'B', 'C', 'D'] as const).map(optLetter => {
+                                const optionKey = `option_${optLetter.toLowerCase()}` as keyof Question;
+                                const optionText = currentQuestion[optionKey] != null ? formatText(String(currentQuestion[optionKey])) : `Option ${optLetter} missing`;
+                                const isSelected = selectedOption === optLetter;
+                                const isCorrect = currentQuestion.correct_option?.toUpperCase() === optLetter;
+
+                                let bg = '#fff', border = 'var(--border)', color = 'var(--ink)', cursor = 'pointer';
+                                if (isCurrentSubmitted) {
+                                    cursor = 'not-allowed';
+                                    if (isCorrect) { bg = 'var(--green-lt)'; border = '#83C8A4'; color = 'var(--green)'; }
+                                    else if (isSelected) { bg = 'var(--red-lt)'; border = '#F4BCBC'; color = 'var(--red)'; }
+                                    else { bg = 'var(--paper-alt)'; color = 'var(--ink-muted)'; }
+                                } else if (isSelected) {
+                                    bg = 'var(--saffron-lt)'; border = 'var(--saffron)'; color = 'var(--saffron)';
+                                }
+
+                                return (
+                                    <div
+                                        key={optLetter}
+                                        onClick={() => handleOptionSelect(optLetter)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'flex-start',
+                                            gap: '0.6rem',
+                                            padding: '0.6rem 0.85rem',
+                                            borderRadius: '7px',
+                                            border: `1.5px solid ${border}`,
+                                            background: bg,
+                                            color,
+                                            cursor,
+                                            transition: 'background 0.15s, border-color 0.15s',
+                                            fontSize: '0.9rem',
+                                        }}
+                                    >
+                                        <span style={{ fontWeight: 700, minWidth: '1.2rem' }}>{optLetter})</span>
+                                        <span className="whitespace-pre-line flex-1">{optionText}</span>
+                                        {isCurrentSubmitted && isCorrect && <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--green)' }}>✓</span>}
+                                        {isCurrentSubmitted && isSelected && !isCorrect && <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--red)' }}>✗</span>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Explanation */}
+                        {isCurrentSubmitted && (
+                            currentQuestion.explanation ? (
+                                <div className="mt-3 p-3 rounded" style={{ background: 'var(--blue-lt)', border: '1px solid #B3CEEB' }}>
+                                    <p style={{ fontWeight: 700, color: 'var(--blue)', marginBottom: '0.4rem', fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Explanation</p>
+                                    <p className="whitespace-pre-line" style={{ fontSize: '0.85rem', color: 'var(--ink)', lineHeight: 1.6 }}>{formatText(currentQuestion.explanation)}</p>
+                                </div>
+                            ) : (
+                                <p className="mt-3" style={{ fontSize: '0.82rem', color: 'var(--ink-muted)', fontStyle: 'italic' }}>No explanation available.</p>
+                            )
+                        )}
+
+                        {/* Navigation */}
+                        <div className="mt-6 pt-4 flex flex-col sm:flex-row justify-between items-center gap-3" style={{ borderTop: '1px solid var(--border)' }}>
+                            <button onClick={handlePrevious} disabled={currentIndex === 0} className="btn btn-nav w-full sm:w-auto">
+                                ← Previous
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={selectedOption === null || isCurrentSubmitted}
+                                className={`btn w-full sm:w-auto ${isCurrentSubmitted ? 'btn-submit-done' : 'btn-submit'}`}
+                            >
+                                {isCurrentSubmitted ? '✓ Submitted' : 'Submit Answer'}
+                            </button>
+                            <button onClick={handleNext} disabled={currentIndex === totalFilteredQuestions - 1} className="btn btn-nav w-full sm:w-auto">
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer Section */}
+                <div className="mt-8" style={{ borderTop: '1px solid var(--border)' }}>
+                    <button
+                        onClick={() => setIsFooterOpen(!isFooterOpen)}
+                        className="w-full p-4 flex justify-between items-center text-left"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                        <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink-muted)' }}>About &amp; Contact</span>
+                        <span style={{ color: 'var(--ink-muted)', fontSize: '0.72rem' }}>{isFooterOpen ? '▼' : '▶'}</span>
+                    </button>
+
+                    <div className={`transition-all duration-300 ease-in-out ${isFooterOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                        <div className="p-4" style={{ fontSize: '0.82rem', color: 'var(--ink-muted)' }}>
+                            <p className="mb-3 max-w-2xl" style={{ lineHeight: 1.65 }}>
+                                <strong style={{ color: 'var(--ink)' }}>Disclaimer:</strong> This app is not affiliated with, associated with, endorsed by, or in any way officially connected with the Union Public Service Commission (UPSC).
+                                <br /><br />
+                                <strong style={{ color: 'var(--ink)' }}>Source:</strong> Questions are sourced from the official UPSC website: <a href="https://upsc.gov.in/examinations/previous-question-papers" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--saffron)' }}>upsc.gov.in</a>
+                                <br /><br />
+                                Explanations are contributed by users for educational purposes. If you believe any content infringes copyright, please contact us.
+                            </p>
+                            <div className="mb-3 space-y-1">
+                                <p style={{ fontWeight: 600, color: 'var(--ink)', marginBottom: '0.4rem' }}>Contact us</p>
+                                <p>Email: upscpreviousquestions@gmail.com</p>
+                                <p>
+                                    Telegram:{' '}
+                                    <a href="https://t.me/+b-yWUaj2okhmN2Q1" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--saffron)' }}>
+                                        UPSC Prelims PYQS
+                                    </a>
+                                </p>
+                                <p>UPI: alamanikanta1110@oksbi</p>
+                            </div>
                             <p>
-                                Telegram:{' '}
-                                <a 
-                                    href="https://t.me/+b-yWUaj2okhmN2Q1" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-indigo-600 hover:text-indigo-800 hover:underline"
-                                >
-                                    UPSC Prelims PYQS
+                                Want to contribute?{' '}
+                                <a href="https://github.com/mous9270/upsc" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--saffron)' }}>
+                                    GitHub ↗
                                 </a>
                             </p>
-                            <p>UPI: alamanikanta1110@oksbi</p>
                         </div>
-                        <p className="text-gray-600">
-                            Want to contribute? Help improve this platform by contributing on{' '}
-                            <a 
-                                href="https://github.com/mous9270/upsc" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-indigo-600 hover:text-indigo-800 hover:underline"
-                            >
-                                GitHub
-                            </a>
-                        </p>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
