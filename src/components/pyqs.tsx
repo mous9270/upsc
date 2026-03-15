@@ -450,16 +450,26 @@ const Pyqs: React.FC = () => {
     // --- Render Logic ---
     return (
         <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-gray-800">UPSC PYQs Practice</h1>
+            <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h1 className="text-2xl sm:text-3xl font-bold text-left text-gray-800">
+                    UPSC PYQs Practice
+                </h1>
 
-            {/* Quiz Button */}
-            <div className="mb-4 sm:mb-6 flex justify-end">
-                <a
-                    href="/quiz"
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                >
-                    Take Quiz
-                </a>
+                {/* Quiz & About Buttons */}
+                <div className="flex justify-start sm:justify-end gap-3">
+                    <a
+                        href="/about"
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md bg-white hover:bg-gray-50 transition-colors text-sm sm:text-base"
+                    >
+                        About Me
+                    </a>
+                    <a
+                        href="/quiz"
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm sm:text-base"
+                    >
+                        Take Quiz
+                    </a>
+                </div>
             </div>
 
             {/* Filter Section - Now Collapsible */}
