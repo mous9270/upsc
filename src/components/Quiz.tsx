@@ -3,6 +3,7 @@ import Papa from 'papaparse';
 import { App } from '@capacitor/app';
 import { useNavigate } from 'react-router-dom';
 import Navigation from './Navigation';
+
 type DataSource = 'builtin' | 'upload' | null;
 
 interface Question {
@@ -163,25 +164,21 @@ const Quiz: React.FC = () => {
         setError(null);
     }, [dataSource]);
 
-    const navigate = useNavigate(); 
+    const navigate = useNavigate();
 
-// Inside your Quiz component, add this useEffect:
-useEffect(() => {
-    const listener = App.addListener('backButton', ({ canGoBack }) => {
-        const currentPath = window.location.pathname;
-        if (currentPath === '/quiz') {
-            navigate('/');
-        } else if (canGoBack) {
-            window.history.back();
-        } else {
-            App.exitApp();
-        }
-    });
-
-    return () => {
-        listener.then((l) => l.remove());
-    };
-}, [navigate]);
+    useEffect(() => {
+        const listener = App.addListener('backButton', ({ canGoBack }) => {
+            const currentPath = window.location.pathname;
+            if (currentPath === '/quiz') {
+                navigate('/');
+            } else if (canGoBack) {
+                window.history.back();
+            } else {
+                App.exitApp();
+            }
+        });
+        return () => { listener.then((l) => l.remove()); };
+    }, [navigate]);
 
     useEffect(() => {
         const loadBuiltinQuestions = async (): Promise<void> => {
@@ -309,7 +306,6 @@ useEffect(() => {
         if (quizState.submitted || !quizState.questions.length) return;
         const score = calculateScore(quizState.questions, quizState.selectedAnswers);
         setQuizState((prev) => ({ ...prev, submitted: true, score }));
-        // Scroll to top to show results
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -352,261 +348,609 @@ useEffect(() => {
     const answeredCount = Object.keys(quizState.selectedAnswers).length;
     const percentage = totalQuestions > 0 ? ((quizState.score / totalQuestions) * 100).toFixed(1) : '0.0';
 
+    // Score colour helper
+    const scoreColor = (): string => {
+        const pct = parseFloat(percentage);
+        if (pct >= 70) return 'var(--green)';
+        if (pct >= 40) return '#B45309';
+        return 'var(--red)';
+    };
+
+    const selectStyle: React.CSSProperties = {
+        width: '100%',
+        padding: '0.45rem 0.7rem',
+        fontSize: '0.85rem',
+        border: '1.5px solid var(--border)',
+        borderRadius: '6px',
+        background: '#fff',
+        color: 'var(--ink)',
+        fontFamily: "'DM Sans', sans-serif",
+        cursor: 'pointer',
+    };
+
+    const labelStyle: React.CSSProperties = {
+        display: 'block',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+        color: 'var(--ink-muted)',
+        marginBottom: '0.3rem',
+    };
+
     return (
         <>
-        <Navigation />
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6 text-center">
-                <a href="/">UPSC Quiz</a>
-            </h1>
+            <Navigation />
 
-            {/* Data source buttons */}
-            <div className="max-w-3xl mx-auto mb-6 flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                    type="button"
-                    onClick={() => setDataSource('builtin')}
-                    className={`px-4 py-2 rounded-md border text-sm font-medium ${dataSource === 'builtin' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'}`}
-                >
-                    Use Built-in UPSC PYQs
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setDataSource('upload')}
-                    className={`px-4 py-2 rounded-md border text-sm font-medium ${dataSource === 'upload' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'}`}
-                >
-                    Upload Your Own CSV
-                </button>
-            </div>
+            {/* ─── Design system styles (same as Pyqs.tsx) ─── */}
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
 
-            {dataSource === null && (
-                <p className="text-center text-gray-600">Select a data source to begin your UPSC Prelims quiz.</p>
-            )}
+                :root {
+                    --blue:      #1A56A0;
+                    --blue-lt:   #E8F0FA;
+                    --ink:       #111827;
+                    --ink-muted: #4B5563;
+                    --paper:     #F7F9FC;
+                    --paper-alt: #EEF2F8;
+                    --border:    #D1DCF0;
+                    --green:     #2E7D52;
+                    --green-lt:  #EAF5EF;
+                    --red:       #B83232;
+                    --red-lt:    #FCEAEA;
+                }
 
-            {/* Built-in filters */}
-            {dataSource === 'builtin' && (
-                <div className="max-w-3xl mx-auto mb-6 bg-white rounded-lg shadow-md p-4">
-                    <h2 className="text-lg font-semibold mb-3">Built-in Question Filters</h2>
-                    {isLoading && <p className="text-blue-600 text-sm mb-2">Loading built-in questions...</p>}
-                    {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
-                    {!isLoading && !error && !allQuestions.length && (
-                        <p className="text-gray-500 text-sm">No built-in questions available. Ensure `upscpyqs.csv` is present.</p>
-                    )}
-                    {allQuestions.length > 0 && (
-                        <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                <div>
-                                    <label htmlFor="paper" className="block text-sm font-medium text-gray-700 mb-1">Paper</label>
-                                    <select id="paper" name="paper" value={filters.paper} onChange={handleFilterChange} className="w-full border border-gray-300 rounded-md p-2 text-sm">
-                                        <option value="">All Papers</option>
-                                        {availablePapers.map((paper) => <option key={paper} value={paper}>{paper}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                                    <select id="subject" name="subject" value={filters.subject} onChange={handleFilterChange} className="w-full border border-gray-300 rounded-md p-2 text-sm" disabled={!availableSubjects.length}>
-                                        <option value="">{filters.paper ? 'All Subjects for Paper' : 'All Subjects'}</option>
-                                        {availableSubjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
-                                    <select id="topic" name="topic" value={filters.topic} onChange={handleFilterChange} className="w-full border border-gray-300 rounded-md p-2 text-sm" disabled={!availableTopics.length}>
-                                        <option value="">{filters.subject ? 'All Topics for Subject' : 'All Topics'}</option>
-                                        {availableTopics.map((topic) => <option key={topic} value={topic}>{topic}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                                    <select id="year" name="year" value={filters.year} onChange={handleFilterChange} className="w-full border border-gray-300 rounded-md p-2 text-sm">
-                                        <option value="">All Years</option>
-                                        {availableYears.map((year) => <option key={year} value={year}>{year}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-3 items-center">
-                                <label className="inline-flex items-center text-sm text-gray-700">
-                                    <input type="checkbox" className="h-4 w-4 text-indigo-600 border-gray-300 rounded mr-2" checked={isRandom} onChange={(e) => setIsRandom(e.target.checked)} />
-                                    Random order
-                                </label>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-gray-700">Question limit (optional):</span>
-                                    <input type="number" min={1} value={questionLimit} onChange={(e) => setQuestionLimit(e.target.value)} className="w-20 border border-gray-300 rounded-md p-1 text-sm" />
-                                </div>
-                            </div>
-                        </>
-                    )}
+                body { background: var(--paper); color: var(--ink); }
+
+                .page-title {
+                    font-family: 'Playfair Display', serif;
+                    font-size: clamp(1.7rem, 5vw, 2.6rem);
+                    font-weight: 900;
+                    color: var(--ink);
+                    letter-spacing: -0.02em;
+                    line-height: 1.1;
+                }
+                .page-title span { color: var(--blue); }
+
+                .page-subtitle {
+                    font-family: 'DM Sans', sans-serif;
+                    font-size: 0.78rem;
+                    font-weight: 500;
+                    letter-spacing: 0.18em;
+                    text-transform: uppercase;
+                    color: var(--ink-muted);
+                    margin-bottom: 0.35rem;
+                }
+
+                .title-rule {
+                    width: 3rem;
+                    height: 3px;
+                    background: var(--blue);
+                    border-radius: 2px;
+                    margin-top: 0.6rem;
+                }
+
+                .btn {
+                    font-family: 'DM Sans', sans-serif;
+                    font-weight: 600;
+                    font-size: 0.82rem;
+                    letter-spacing: 0.04em;
+                    border-radius: 6px;
+                    padding: 0.5rem 1.1rem;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.35rem;
+                    cursor: pointer;
+                    transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.1s;
+                    white-space: nowrap;
+                    border: 1.5px solid transparent;
+                    text-decoration: none;
+                }
+                .btn:active { transform: translateY(1px); }
+
+                .btn-primary {
+                    background: var(--blue);
+                    color: #fff;
+                    border-color: var(--blue);
+                    box-shadow: 0 2px 8px rgba(26,86,160,0.22);
+                }
+                .btn-primary:hover {
+                    background: #133F7A;
+                    border-color: #133F7A;
+                    box-shadow: 0 4px 14px rgba(26,86,160,0.32);
+                }
+                .btn-primary:disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                }
+
+                .btn-secondary {
+                    background: transparent;
+                    color: var(--ink);
+                    border-color: var(--border);
+                }
+                .btn-secondary:hover {
+                    background: var(--paper-alt);
+                    border-color: var(--ink-muted);
+                }
+
+                /* Source toggle — active state */
+                .btn-source {
+                    background: var(--paper-alt);
+                    color: var(--ink-muted);
+                    border-color: var(--border);
+                    flex: 1;
+                    justify-content: center;
+                }
+                .btn-source:hover { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); }
+                .btn-source.active {
+                    background: var(--blue);
+                    color: #fff;
+                    border-color: var(--blue);
+                    box-shadow: 0 2px 8px rgba(26,86,160,0.22);
+                }
+
+                /* Start / Submit — green */
+                .btn-green {
+                    background: var(--green);
+                    color: #fff;
+                    border-color: var(--green);
+                    box-shadow: 0 2px 8px rgba(46,125,82,0.2);
+                    padding: 0.55rem 1.6rem;
+                }
+                .btn-green:hover:not(:disabled) {
+                    background: #205A3A;
+                    border-color: #205A3A;
+                }
+                .btn-green:disabled { opacity: 0.38; cursor: not-allowed; }
+
+                .btn-sm { font-size: 0.76rem; padding: 0.35rem 0.8rem; }
+
+                .card {
+                    background: #fff;
+                    border: 1px solid var(--border);
+                    border-radius: 10px;
+                    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+                }
+
+                /* Sticky progress bar */
+                .sticky-bar {
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
+                    background: #fff;
+                    border-bottom: 1px solid var(--border);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+                    border-radius: 8px;
+                    padding: 0.75rem 1rem;
+                    margin-bottom: 1.25rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 1rem;
+                }
+
+                /* Progress track */
+                .progress-track {
+                    flex: 1;
+                    height: 6px;
+                    background: var(--paper-alt);
+                    border-radius: 99px;
+                    overflow: hidden;
+                }
+                .progress-fill {
+                    height: 100%;
+                    background: var(--blue);
+                    border-radius: 99px;
+                    transition: width 0.3s ease;
+                }
+
+                /* Score badge */
+                .score-badge {
+                    font-family: 'Playfair Display', serif;
+                    font-size: 2.8rem;
+                    font-weight: 900;
+                    line-height: 1;
+                }
+            `}</style>
+
+            <div
+                className="container mx-auto px-3 sm:px-5 py-3 sm:py-5"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+            >
+                {/* ── Header ── */}
+                <div className="mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div>
+                        <p className="page-subtitle">Civil Services Examination</p>
+                        <h1 className="page-title">
+                            UPSC&nbsp;<span>Quiz</span>
+                        </h1>
+                        <div className="title-rule" />
+                    </div>
+                    <a href="/" className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start' }}>
+                        ← Back to PYQs
+                    </a>
                 </div>
-            )}
 
-            {/* Upload CSV */}
-            {dataSource === 'upload' && (
-                <div className="max-w-md mx-auto mb-6 bg-white rounded-lg shadow-md p-4">
-                    <h2 className="text-lg font-semibold mb-3">Upload Quiz CSV</h2>
-                    <input type="file" accept=".csv" onChange={handleUploadedCsv} className="w-full p-2 border border-gray-300 rounded text-sm" disabled={isLoading} />
-                    {isLoading && <p className="mt-2 text-blue-600 text-sm">Parsing uploaded CSV...</p>}
-                    {error && <p className="mt-2 text-red-600 text-sm">{error}</p>}
-                    {!isLoading && !error && allQuestions.length > 0 && (
-                        <p className="mt-2 text-sm text-gray-700">Loaded {allQuestions.length} questions from uploaded CSV.</p>
-                    )}
-                </div>
-            )}
-
-            {dataSource !== null && (
-                <div className="max-w-3xl mx-auto mb-8 flex justify-center">
-                    <button
-                        type="button"
-                        onClick={startQuiz}
-                        disabled={isLoading || (dataSource === 'upload' && !allQuestions.length)}
-                        className="px-6 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                        Start Quiz
-                    </button>
-                </div>
-            )}
-
-            {/* All questions at once */}
-            {!quizState.submitted && quizState.questions.length > 0 && (
-                <div className="max-w-3xl mx-auto">
-                    {/* Sticky progress bar */}
-                    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm px-4 py-3 mb-6 rounded-lg flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">
-                            Answered <span className="text-indigo-600 font-bold">{answeredCount}</span> of <span className="font-bold">{totalQuestions}</span>
-                        </span>
+                {/* ── Data source toggle ── */}
+                <div className="card mb-4 sm:mb-5 p-3 sm:p-4">
+                    <p style={labelStyle as React.CSSProperties}>Select question source</p>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-1">
                         <button
                             type="button"
-                            onClick={submitQuiz}
-                            className="px-4 py-2 rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+                            onClick={() => setDataSource('builtin')}
+                            className={`btn btn-source${dataSource === 'builtin' ? ' active' : ''}`}
                         >
-                            Submit Quiz
+                            {/* Book icon */}
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            Built-in UPSC PYQs
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setDataSource('upload')}
+                            className={`btn btn-source${dataSource === 'upload' ? ' active' : ''}`}
+                        >
+                            {/* Upload icon */}
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                            Upload Your Own CSV
                         </button>
                     </div>
 
-                    <div className="space-y-6">
-                        {quizState.questions.map((question, index) => (
-                            <div key={question.id} className="bg-white rounded-lg shadow-md p-6">
-                                <div className="mb-4 flex justify-between items-baseline">
-                                    <h2 className="text-lg font-semibold text-gray-800">Question {index + 1}</h2>
-                                    <span className="text-xs text-gray-500">
-                                        ID: {question.id}{question.paper && ` | ${question.paper}`}{question.year && ` (${question.year})`}
-                                    </span>
-                                </div>
+                    {dataSource === null && (
+                        <p className="mt-3 text-sm" style={{ color: 'var(--ink-muted)' }}>
+                            Choose a source above to begin your quiz.
+                        </p>
+                    )}
+                </div>
 
-                                {question.passage && (
-                                    <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-700">
-                                        <p className="font-semibold mb-1">Passage</p>
-                                        <p className="whitespace-pre-line">{formatText(question.passage)}</p>
-                                    </div>
-                                )}
+                {/* ── Built-in filters ── */}
+                {dataSource === 'builtin' && (
+                    <div className="card mb-4 sm:mb-5 p-3 sm:p-4">
+                        <p style={{ ...labelStyle, marginBottom: '0.8rem' }}>Filter questions</p>
 
-                                {question.image_url && (
-                                    <div className="mb-4 text-center">
-                                        <img src={`/${question.image_url}`} alt="Question related" className="inline-block max-w-full h-auto rounded border border-gray-200" />
-                                    </div>
-                                )}
+                        {isLoading && (
+                            <p className="text-sm mb-2" style={{ color: 'var(--blue)' }}>Loading questions…</p>
+                        )}
+                        {error && (
+                            <p className="text-sm mb-2 p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid #F4BCBC' }}>
+                                {error}
+                            </p>
+                        )}
+                        {!isLoading && !error && !allQuestions.length && (
+                            <p className="text-sm" style={{ color: 'var(--ink-muted)' }}>
+                                No questions available. Ensure <code>upscpyqs.csv</code> is present.
+                            </p>
+                        )}
 
-                                <p className="mb-4 text-base text-gray-900 whitespace-pre-line">{formatText(question.question)}</p>
-
-                                <div className="space-y-3">
-                                    {(['A', 'B', 'C', 'D'] as const).map((letter) => {
-                                        const optionKey = `option_${letter.toLowerCase()}` as keyof Question;
-                                        const optionText = question[optionKey];
-                                        const isSelected = quizState.selectedAnswers[index] === letter;
-                                        return (
-                                            <button
-                                                key={letter}
-                                                type="button"
-                                                onClick={() => handleAnswerSelect(index, letter)}
-                                                className={`w-full text-left p-3 rounded border text-sm transition-colors ${isSelected ? 'bg-indigo-100 border-indigo-400' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+                        {allQuestions.length > 0 && (
+                            <>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                                    {[
+                                        { id: 'paper', label: 'Paper', options: availablePapers, placeholder: 'All Papers' },
+                                        { id: 'subject', label: 'Subject', options: availableSubjects, placeholder: filters.paper ? 'All Subjects for Paper' : 'All Subjects', disabled: !availableSubjects.length },
+                                        { id: 'topic', label: 'Topic', options: availableTopics, placeholder: filters.subject ? 'All Topics for Subject' : 'All Topics', disabled: !availableTopics.length },
+                                        { id: 'year', label: 'Year', options: availableYears, placeholder: 'All Years' },
+                                    ].map(({ id, label, options, placeholder, disabled }) => (
+                                        <div key={id}>
+                                            <label htmlFor={id} style={labelStyle as React.CSSProperties}>{label}</label>
+                                            <select
+                                                id={id}
+                                                name={id}
+                                                value={(filters as any)[id]}
+                                                onChange={handleFilterChange}
+                                                disabled={disabled}
+                                                style={{ ...selectStyle, background: disabled ? 'var(--paper-alt)' : '#fff', cursor: disabled ? 'not-allowed' : 'pointer' }}
                                             >
-                                                <span className="font-bold mr-2">{letter})</span>
-                                                <span className="whitespace-pre-line">{formatText(optionText ?? '')}</span>
-                                            </button>
-                                        );
-                                    })}
+                                                <option value="">{placeholder}</option>
+                                                {options.map((o) => <option key={o} value={o}>{o}</option>)}
+                                            </select>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
-                        ))}
-                    </div>
 
-                    {/* Submit button at bottom */}
-                    <div className="mt-8 flex justify-center">
+                                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink)' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={isRandom}
+                                            onChange={(e) => setIsRandom(e.target.checked)}
+                                            style={{ accentColor: 'var(--blue)', width: '1rem', height: '1rem' }}
+                                        />
+                                        Random order
+                                    </label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--ink)' }}>
+                                        <span style={{ fontWeight: 500 }}>Question limit:</span>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            value={questionLimit}
+                                            onChange={(e) => setQuestionLimit(e.target.value)}
+                                            placeholder="All"
+                                            style={{
+                                                width: '5rem',
+                                                padding: '0.35rem 0.5rem',
+                                                border: '1.5px solid var(--border)',
+                                                borderRadius: '6px',
+                                                fontSize: '0.85rem',
+                                                fontFamily: "'DM Sans', sans-serif",
+                                                color: 'var(--ink)',
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {/* ── Upload CSV ── */}
+                {dataSource === 'upload' && (
+                    <div className="card mb-4 sm:mb-5 p-3 sm:p-4">
+                        <p style={{ ...labelStyle, marginBottom: '0.8rem' }}>Upload quiz CSV</p>
+                        <label style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            padding: '1.5rem',
+                            border: '2px dashed var(--border)',
+                            borderRadius: '8px',
+                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                            background: 'var(--paper-alt)',
+                            color: 'var(--ink-muted)',
+                            fontSize: '0.85rem',
+                        }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--blue)' }}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                            <span>Click to choose a CSV file</span>
+                            <input type="file" accept=".csv" onChange={handleUploadedCsv} disabled={isLoading} style={{ display: 'none' }} />
+                        </label>
+
+                        {isLoading && <p className="mt-2 text-sm" style={{ color: 'var(--blue)' }}>Parsing CSV…</p>}
+                        {error && (
+                            <p className="mt-2 text-sm p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid #F4BCBC' }}>
+                                {error}
+                            </p>
+                        )}
+                        {!isLoading && !error && allQuestions.length > 0 && (
+                            <p className="mt-2 text-sm" style={{ color: 'var(--green)', fontWeight: 500 }}>
+                                ✓ {allQuestions.length} questions loaded
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* ── Start Quiz button ── */}
+                {dataSource !== null && (
+                    <div className="flex justify-center mb-6 sm:mb-8">
                         <button
                             type="button"
-                            onClick={submitQuiz}
-                            className="px-8 py-3 rounded-md bg-green-600 text-white text-base font-medium hover:bg-green-700"
+                            onClick={startQuiz}
+                            disabled={isLoading || (dataSource === 'upload' && !allQuestions.length)}
+                            className="btn btn-green"
                         >
-                            Submit Quiz ({answeredCount}/{totalQuestions} answered)
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            Start Quiz
                         </button>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Results */}
-            {quizState.submitted && (
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h2 className="text-2xl font-bold mb-2">Quiz Results</h2>
-                        <p className="text-lg mb-1">Score: {quizState.score} / {totalQuestions}</p>
-                        <p className="text-gray-700">Percentage: {percentage}%</p>
-                    </div>
+                {/* ── Active quiz ── */}
+                {!quizState.submitted && quizState.questions.length > 0 && (
+                    <div className="max-w-3xl mx-auto">
+                        {/* Sticky progress bar */}
+                        <div className="sticky-bar">
+                            <div className="progress-track">
+                                <div
+                                    className="progress-fill"
+                                    style={{ width: `${totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0}%` }}
+                                />
+                            </div>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ink-muted)', whiteSpace: 'nowrap' }}>
+                                <span style={{ color: 'var(--blue)' }}>{answeredCount}</span> / {totalQuestions}
+                            </span>
+                            <button type="button" onClick={submitQuiz} className="btn btn-green btn-sm">
+                                Submit Quiz
+                            </button>
+                        </div>
 
-                    <div className="space-y-4">
-                        {quizState.questions.map((question, index) => {
-                            const selected = quizState.selectedAnswers[index];
-                            const correctLetter = question.correct_option ? question.correct_option.toUpperCase() : null;
-                            return (
-                                <div key={question.id} className="bg-white rounded-lg shadow-md p-5">
-                                    <div className="mb-3 flex justify-between items-baseline">
-                                        <h3 className="text-base font-semibold text-gray-800">Question {index + 1}</h3>
-                                        <span className="text-xs text-gray-500">
-                                            ID: {question.id}{question.paper && ` | ${question.paper}`}{question.year && ` (${question.year})`}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {quizState.questions.map((question, index) => (
+                                <div key={question.id} className="card p-4 sm:p-5">
+                                    {/* Header */}
+                                    <div className="mb-3 pb-2 flex justify-between items-baseline" style={{ borderBottom: '1px solid var(--border)' }}>
+                                        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1rem', fontWeight: 700, color: 'var(--ink)' }}>
+                                            Question {index + 1}
+                                        </h2>
+                                        <span style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', background: 'var(--paper-alt)', padding: '0.18rem 0.6rem', borderRadius: '20px', border: '1px solid var(--border)' }}>
+                                            ID {question.id}{question.paper && ` · ${question.paper}`}{question.year && ` · ${question.year}`}
                                         </span>
                                     </div>
+
+                                    {/* Passage */}
                                     {question.passage && (
-                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-700">
-                                            <p className="font-semibold mb-1">Passage</p>
-                                            <p className="whitespace-pre-line">{formatText(question.passage)}</p>
+                                        <div className="mb-3 p-3 rounded" style={{ background: 'var(--paper-alt)', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
+                                            <p style={{ fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--blue)', marginBottom: '0.3rem' }}>Passage</p>
+                                            <p className="whitespace-pre-line" style={{ color: 'var(--ink)' }}>{formatText(question.passage)}</p>
                                         </div>
                                     )}
+
+                                    {/* Image */}
                                     {question.image_url && (
                                         <div className="mb-3 text-center">
-                                            <img src={`/${question.image_url}`} alt="Question related" className="inline-block max-w-full h-auto rounded border border-gray-200" />
+                                            <img src={`/${question.image_url}`} alt="Question related" className="inline-block max-w-full h-auto rounded" style={{ border: '1px solid var(--border)' }} />
                                         </div>
                                     )}
-                                    <p className="mb-3 text-sm text-gray-900 whitespace-pre-line">{formatText(question.question)}</p>
-                                    <div className="space-y-2 mb-3">
+
+                                    {/* Question text */}
+                                    <p className="mb-4 whitespace-pre-line" style={{ fontSize: '0.95rem', color: 'var(--ink)', lineHeight: 1.65 }}>
+                                        {formatText(question.question)}
+                                    </p>
+
+                                    {/* Options */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                         {(['A', 'B', 'C', 'D'] as const).map((letter) => {
                                             const optionKey = `option_${letter.toLowerCase()}` as keyof Question;
-                                            const optionText = question[optionKey];
-                                            const isCorrect = correctLetter === letter;
-                                            const isSelected = selected === letter;
-
-                                            let classes = 'p-2 rounded border text-sm whitespace-pre-line';
-                                            if (isCorrect) classes += ' bg-green-100 border-green-400';
-                                            else if (isSelected && !isCorrect) classes += ' bg-red-100 border-red-400';
-                                            else classes += ' bg-white border-gray-300';
-
+                                            const isSelected = quizState.selectedAnswers[index] === letter;
                                             return (
-                                                <div key={letter} className={classes}>
-                                                    <span className="font-bold mr-2">{letter})</span>
-                                                    {formatText(optionText ?? '')}
-                                                </div>
+                                                <button
+                                                    key={letter}
+                                                    type="button"
+                                                    onClick={() => handleAnswerSelect(index, letter)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'flex-start',
+                                                        gap: '0.6rem',
+                                                        padding: '0.6rem 0.85rem',
+                                                        borderRadius: '7px',
+                                                        border: `1.5px solid ${isSelected ? 'var(--blue)' : 'var(--border)'}`,
+                                                        background: isSelected ? 'var(--blue-lt)' : '#fff',
+                                                        color: isSelected ? 'var(--blue)' : 'var(--ink)',
+                                                        cursor: 'pointer',
+                                                        textAlign: 'left',
+                                                        fontSize: '0.9rem',
+                                                        fontFamily: "'DM Sans', sans-serif",
+                                                        transition: 'background 0.15s, border-color 0.15s',
+                                                        width: '100%',
+                                                    }}
+                                                >
+                                                    <span style={{ fontWeight: 700, minWidth: '1.2rem' }}>{letter})</span>
+                                                    <span className="whitespace-pre-line">{formatText(question[optionKey] ?? '')}</span>
+                                                </button>
                                             );
                                         })}
                                     </div>
-                                    {question.explanation && (
-                                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                                            <p className="font-semibold text-blue-800 mb-1 text-sm">Explanation</p>
-                                            <p className="text-sm text-gray-700 whitespace-pre-line">{formatText(question.explanation)}</p>
-                                        </div>
-                                    )}
                                 </div>
-                            );
-                        })}
+                            ))}
+                        </div>
+
+                        {/* Bottom submit */}
+                        <div className="mt-8 flex justify-center">
+                            <button type="button" onClick={submitQuiz} className="btn btn-green" style={{ padding: '0.65rem 2rem', fontSize: '0.9rem' }}>
+                                Submit Quiz ({answeredCount}/{totalQuestions} answered)
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+
+                {/* ── Results ── */}
+                {quizState.submitted && (
+                    <div className="max-w-3xl mx-auto">
+                        {/* Score card */}
+                        <div className="card p-5 sm:p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div style={{ textAlign: 'center', minWidth: '8rem' }}>
+                                <p className="score-badge" style={{ color: scoreColor() }}>{percentage}%</p>
+                                <p style={{ fontSize: '0.78rem', color: 'var(--ink-muted)', marginTop: '0.25rem', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>
+                                    {quizState.score} / {totalQuestions} correct
+                                </p>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div className="title-rule" style={{ marginBottom: '0.6rem' }} />
+                                <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.4rem', fontWeight: 700, color: 'var(--ink)', marginBottom: '0.25rem' }}>
+                                    Quiz Results
+                                </h2>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
+                                    {parseFloat(percentage) >= 70 ? 'Great work! Keep practising to strengthen weak areas.' :
+                                     parseFloat(percentage) >= 40 ? 'Good effort. Review the explanations below to improve.' :
+                                     'Keep going — every attempt builds familiarity with the syllabus.'}
+                                </p>
+                            </div>
+                            <button type="button" onClick={startQuiz} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
+                                Retry
+                            </button>
+                        </div>
+
+                        {/* Question review */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {quizState.questions.map((question, index) => {
+                                const selected = quizState.selectedAnswers[index];
+                                const correctLetter = question.correct_option ? question.correct_option.toUpperCase() : null;
+                                const isCorrectAnswer = selected && correctLetter && selected.toUpperCase() === correctLetter;
+
+                                return (
+                                    <div key={question.id} className="card p-4 sm:p-5">
+                                        {/* Header */}
+                                        <div className="mb-3 pb-2 flex justify-between items-baseline" style={{ borderBottom: '1px solid var(--border)' }}>
+                                            <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1rem', fontWeight: 700, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                Question {index + 1}
+                                                {isCorrectAnswer
+                                                    ? <span style={{ fontSize: '0.75rem', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, background: 'var(--green-lt)', color: 'var(--green)', padding: '0.15rem 0.55rem', borderRadius: '20px', border: '1px solid #A8D5BC' }}>✓ Correct</span>
+                                                    : <span style={{ fontSize: '0.75rem', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, background: 'var(--red-lt)', color: 'var(--red)', padding: '0.15rem 0.55rem', borderRadius: '20px', border: '1px solid #F4BCBC' }}>✗ Incorrect</span>
+                                                }
+                                            </h3>
+                                            <span style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', background: 'var(--paper-alt)', padding: '0.18rem 0.6rem', borderRadius: '20px', border: '1px solid var(--border)' }}>
+                                                ID {question.id}{question.paper && ` · ${question.paper}`}{question.year && ` · ${question.year}`}
+                                            </span>
+                                        </div>
+
+                                        {/* Passage */}
+                                        {question.passage && (
+                                            <div className="mb-3 p-3 rounded" style={{ background: 'var(--paper-alt)', border: '1px solid var(--border)', fontSize: '0.82rem' }}>
+                                                <p style={{ fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--blue)', marginBottom: '0.3rem' }}>Passage</p>
+                                                <p className="whitespace-pre-line" style={{ color: 'var(--ink)' }}>{formatText(question.passage)}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Image */}
+                                        {question.image_url && (
+                                            <div className="mb-3 text-center">
+                                                <img src={`/${question.image_url}`} alt="Question related" className="inline-block max-w-full h-auto rounded" style={{ border: '1px solid var(--border)' }} />
+                                            </div>
+                                        )}
+
+                                        <p className="mb-3 whitespace-pre-line" style={{ fontSize: '0.9rem', color: 'var(--ink)', lineHeight: 1.65 }}>
+                                            {formatText(question.question)}
+                                        </p>
+
+                                        {/* Options */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                                            {(['A', 'B', 'C', 'D'] as const).map((letter) => {
+                                                const optionKey = `option_${letter.toLowerCase()}` as keyof Question;
+                                                const isCorrect = correctLetter === letter;
+                                                const isUserSelected = selected === letter;
+
+                                                let bg = '#fff', border = 'var(--border)', color = 'var(--ink)';
+                                                if (isCorrect) { bg = 'var(--green-lt)'; border = '#83C8A4'; color = 'var(--green)'; }
+                                                else if (isUserSelected && !isCorrect) { bg = 'var(--red-lt)'; border = '#F4BCBC'; color = 'var(--red)'; }
+
+                                                return (
+                                                    <div
+                                                        key={letter}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'flex-start',
+                                                            gap: '0.6rem',
+                                                            padding: '0.55rem 0.85rem',
+                                                            borderRadius: '7px',
+                                                            border: `1.5px solid ${border}`,
+                                                            background: bg,
+                                                            color,
+                                                            fontSize: '0.88rem',
+                                                        }}
+                                                    >
+                                                        <span style={{ fontWeight: 700, minWidth: '1.2rem' }}>{letter})</span>
+                                                        <span className="whitespace-pre-line flex-1">{formatText(question[optionKey] ?? '')}</span>
+                                                        {isCorrect && <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--green)' }}>✓</span>}
+                                                        {isUserSelected && !isCorrect && <span style={{ marginLeft: 'auto', fontWeight: 700, color: 'var(--red)' }}>✗</span>}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Explanation */}
+                                        {question.explanation && (
+                                            <div className="p-3 rounded" style={{ background: 'var(--blue-lt)', border: '1px solid #B3CEEB' }}>
+                                                <p style={{ fontWeight: 700, color: 'var(--blue)', marginBottom: '0.4rem', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Explanation</p>
+                                                <p className="whitespace-pre-line" style={{ fontSize: '0.85rem', color: 'var(--ink)', lineHeight: 1.6 }}>{formatText(question.explanation)}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
         </>
     );
 };
