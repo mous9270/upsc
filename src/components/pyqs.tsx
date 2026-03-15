@@ -455,8 +455,16 @@ const Pyqs: React.FC = () => {
                     UPSC PYQs Practice
                 </h1>
 
-                {/* Quiz & About Buttons */}
-                <div className="flex justify-start sm:justify-end gap-3">
+                {/* Quiz, About & Download Buttons */}
+                <div className="flex flex-wrap justify-start sm:justify-end gap-2 sm:gap-3">
+                    <a
+                        href="https://play.google.com/store/apps/details?id=com.upscpyqs.app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 sm:px-4 py-2 border border-green-600 text-green-700 rounded-md bg-white hover:bg-green-50 hover:border-green-700 transition-colors text-xs sm:text-sm font-medium"
+                    >
+                        Download Android App
+                    </a>
                     <a
                         href="/about"
                         className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md bg-white hover:bg-gray-50 transition-colors text-sm sm:text-base"
