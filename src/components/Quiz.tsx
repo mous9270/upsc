@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
 import { App } from '@capacitor/app';
 import { useNavigate } from 'react-router-dom';
+import Navigation from './Navigation';
 type DataSource = 'builtin' | 'upload' | null;
 
 interface Question {
@@ -352,6 +353,8 @@ useEffect(() => {
     const percentage = totalQuestions > 0 ? ((quizState.score / totalQuestions) * 100).toFixed(1) : '0.0';
 
     return (
+        <>
+        <Navigation />
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-6 text-center">
                 <a href="/">UPSC Quiz</a>
@@ -604,6 +607,7 @@ useEffect(() => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 
