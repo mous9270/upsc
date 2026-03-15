@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
 import { App } from '@capacitor/app';
 import { useNavigate } from 'react-router-dom';
-import Navigation from './Navigation';
+// import Navigation from './Navigation';
 
 type DataSource = 'builtin' | 'upload' | null;
 
@@ -380,7 +380,7 @@ const Quiz: React.FC = () => {
 
     return (
         <>
-            <Navigation />
+            {/* <Navigation /> */}
 
             {/* ─── Design system styles (same as Pyqs.tsx) ─── */}
             <style>{`
