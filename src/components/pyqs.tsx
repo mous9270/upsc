@@ -614,7 +614,7 @@ const Pyqs: React.FC = () => {
                         style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                         <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink)' }}>
-                            ⚙ Select Filters
+                            Select Filters
                         </span>
                         <span style={{ color: 'var(--ink-muted)', fontSize: '0.75rem' }}>
                             {isFiltersOpen ? '▼' : '▶'}
