@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
+import MultiSelect, { type OptionGroup } from './MultiSelect';
 import { App } from '@capacitor/app';
 import { useNavigate } from 'react-router-dom';
 // import Navigation from './Navigation';
@@ -32,9 +33,9 @@ interface QuizState {
 
 interface Filters {
     paper: string;
-    subject: string;
-    topic: string;
-    year: string;
+    subjects: string[];
+    topics: string[];
+    years: string[];
 }
 
 interface BuiltinRow {
@@ -123,9 +124,9 @@ const applyFilters = (
 ): Question[] => {
     let filtered = [...questions];
     if (filters.paper) filtered = filtered.filter((q) => q.paper === filters.paper);
-    if (filters.subject) filtered = filtered.filter((q) => q.subject === filters.subject);
-    if (filters.topic) filtered = filtered.filter((q) => q.topic === filters.topic);
-    if (filters.year) filtered = filtered.filter((q) => q.year === filters.year);
+    if (filters.subjects.length > 0) filtered = filtered.filter((q) => q.subject !== null && filters.subjects.includes(q.subject));
+    if (filters.topics.length > 0) filtered = filtered.filter((q) => q.topic !== null && filters.topics.includes(q.topic));
+    if (filters.years.length > 0) filtered = filtered.filter((q) => q.year !== null && filters.years.includes(q.year));
     if (isRandom) filtered = shuffleArray(filtered);
     if (questionLimit !== null && questionLimit > 0) filtered = filtered.slice(0, questionLimit);
     return filtered;
@@ -149,7 +150,7 @@ const Quiz: React.FC = () => {
         submitted: false,
         score: 0,
     });
-    const [filters, setFilters] = useState<Filters>({ paper: '', subject: '', topic: '', year: '' });
+    const [filters, setFilters] = useState<Filters>({ paper: '', subjects: [], topics: [], years: [] });
     const [isRandom, setIsRandom] = useState<boolean>(false);
     const [questionLimit, setQuestionLimit] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -158,7 +159,7 @@ const Quiz: React.FC = () => {
     useEffect(() => {
         setAllQuestions([]);
         setQuizState({ questions: [], selectedAnswers: {}, submitted: false, score: 0 });
-        setFilters({ paper: '', subject: '', topic: '', year: '' });
+        setFilters({ paper: '', subjects: [], topics: [], years: [] });
         setIsRandom(false);
         setQuestionLimit('');
         setError(null);
@@ -302,6 +303,10 @@ const Quiz: React.FC = () => {
         }));
     };
 
+    const downloadAsPdf = (): void => {
+        window.print();
+    };
+
     const submitQuiz = (): void => {
         if (quizState.submitted || !quizState.questions.length) return;
         const score = calculateScore(quizState.questions, quizState.selectedAnswers);
@@ -310,13 +315,29 @@ const Quiz: React.FC = () => {
     };
 
     const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-        const { name, value } = event.target;
+        const { value } = event.target;
+        setFilters((prev) => ({ ...prev, paper: value, subjects: [], topics: [] }));
+    };
+
+    const handleSubjectsChange = (subjects: string[]): void => {
         setFilters((prev) => {
-            const next = { ...prev, [name]: value };
-            if (name === 'paper') { next.subject = ''; next.topic = ''; }
-            else if (name === 'subject') { next.topic = ''; }
-            return next;
+            const base = prev.paper ? allQuestions.filter((q) => q.paper === prev.paper) : allQuestions;
+            const validTopics = new Set(
+                base
+                    .filter(q => subjects.length === 0 || (q.subject !== null && subjects.includes(q.subject)))
+                    .map(q => q.topic)
+                    .filter((t): t is string => Boolean(t))
+            );
+            return { ...prev, subjects, topics: prev.topics.filter(t => validTopics.has(t)) };
         });
+    };
+
+    const handleTopicsChange = (topics: string[]): void => {
+        setFilters((prev) => ({ ...prev, topics }));
+    };
+
+    const handleYearsChange = (years: string[]): void => {
+        setFilters((prev) => ({ ...prev, years }));
     };
 
     const availablePapers = useMemo(() => {
@@ -333,9 +354,22 @@ const Quiz: React.FC = () => {
     const availableTopics = useMemo(() => {
         if (dataSource !== 'builtin') return [];
         let base = filters.paper ? allQuestions.filter((q) => q.paper === filters.paper) : allQuestions;
-        if (filters.subject) base = base.filter((q) => q.subject === filters.subject);
+        if (filters.subjects.length > 0) base = base.filter((q) => q.subject !== null && filters.subjects.includes(q.subject));
         return Array.from(new Set(base.map((q) => q.topic).filter((t): t is string => Boolean(t)))).sort();
-    }, [allQuestions, dataSource, filters.paper, filters.subject]);
+    }, [allQuestions, dataSource, filters.paper, filters.subjects]);
+
+    const topicGroups = useMemo((): OptionGroup[] | null => {
+        if (dataSource !== 'builtin' || filters.subjects.length < 2) return null;
+        const base = filters.paper ? allQuestions.filter((q) => q.paper === filters.paper) : allQuestions;
+        return filters.subjects
+            .map(subject => ({
+                label: subject,
+                options: Array.from(new Set(
+                    base.filter(q => q.subject === subject).map(q => q.topic).filter((t): t is string => Boolean(t))
+                )).sort(),
+            }))
+            .filter(g => g.options.length > 0);
+    }, [allQuestions, dataSource, filters.paper, filters.subjects]);
 
     const availableYears = useMemo(() => {
         if (dataSource !== 'builtin') return [];
@@ -552,6 +586,22 @@ const Quiz: React.FC = () => {
                     font-weight: 900;
                     line-height: 1;
                 }
+
+                .print-only { display: none; }
+
+                @media print {
+                    .no-print { display: none !important; }
+                    .print-only { display: block !important; }
+                    body { background: #fff !important; }
+                    .card {
+                        box-shadow: none !important;
+                        border: 1px solid #ccc !important;
+                        break-inside: avoid;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .sticky-bar { display: none !important; }
+                }
             `}</style>
 
             <div
@@ -567,13 +617,13 @@ const Quiz: React.FC = () => {
                         </h1>
                         <div className="title-rule" />
                     </div>
-                    <a href="/" className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start' }}>
+                    <a href="/" className="btn btn-secondary btn-sm no-print" style={{ alignSelf: 'flex-start' }}>
                         ← Back to PYQs
                     </a>
                 </div>
 
                 {/* ── Data source toggle ── */}
-                <div className="card mb-4 sm:mb-5 p-3 sm:p-4">
+                <div className="card mb-4 sm:mb-5 p-3 sm:p-4 no-print">
                     <p style={labelStyle as React.CSSProperties}>Select question source</p>
                     <div className="flex flex-col sm:flex-row gap-2 mt-1">
                         <button
@@ -605,7 +655,7 @@ const Quiz: React.FC = () => {
 
                 {/* ── Built-in filters ── */}
                 {dataSource === 'builtin' && (
-                    <div className="card mb-4 sm:mb-5 p-3 sm:p-4">
+                    <div className="card mb-4 sm:mb-5 p-3 sm:p-4 no-print">
                         <p style={{ ...labelStyle, marginBottom: '0.8rem' }}>Filter questions</p>
 
                         {isLoading && (
@@ -625,27 +675,44 @@ const Quiz: React.FC = () => {
                         {allQuestions.length > 0 && (
                             <>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-                                    {[
-                                        { id: 'paper', label: 'Paper', options: availablePapers, placeholder: 'All Papers' },
-                                        { id: 'subject', label: 'Subject', options: availableSubjects, placeholder: filters.paper ? 'All Subjects for Paper' : 'All Subjects', disabled: !availableSubjects.length },
-                                        { id: 'topic', label: 'Topic', options: availableTopics, placeholder: filters.subject ? 'All Topics for Subject' : 'All Topics', disabled: !availableTopics.length },
-                                        { id: 'year', label: 'Year', options: availableYears, placeholder: 'All Years' },
-                                    ].map(({ id, label, options, placeholder, disabled }) => (
-                                        <div key={id}>
-                                            <label htmlFor={id} style={labelStyle as React.CSSProperties}>{label}</label>
-                                            <select
-                                                id={id}
-                                                name={id}
-                                                value={(filters as any)[id]}
-                                                onChange={handleFilterChange}
-                                                disabled={disabled}
-                                                style={{ ...selectStyle, background: disabled ? 'var(--paper-alt)' : '#fff', cursor: disabled ? 'not-allowed' : 'pointer' }}
-                                            >
-                                                <option value="">{placeholder}</option>
-                                                {options.map((o) => <option key={o} value={o}>{o}</option>)}
-                                            </select>
-                                        </div>
-                                    ))}
+                                    {/* Paper — single select (top-level grouping) */}
+                                    <div>
+                                        <label htmlFor="paper" style={labelStyle as React.CSSProperties}>Paper</label>
+                                        <select
+                                            id="paper"
+                                            name="paper"
+                                            value={filters.paper}
+                                            onChange={handleFilterChange}
+                                            style={selectStyle}
+                                        >
+                                            <option value="">All Papers</option>
+                                            {availablePapers.map((p) => <option key={p} value={p}>{p}</option>)}
+                                        </select>
+                                    </div>
+                                    <MultiSelect
+                                        label="Subject"
+                                        selected={filters.subjects}
+                                        onChange={handleSubjectsChange}
+                                        options={availableSubjects}
+                                        placeholder={filters.paper ? 'All Subjects for Paper' : 'All Subjects'}
+                                        disabled={!availableSubjects.length}
+                                    />
+                                    <MultiSelect
+                                        label="Topic"
+                                        selected={filters.topics}
+                                        onChange={handleTopicsChange}
+                                        options={topicGroups ? undefined : availableTopics}
+                                        groups={topicGroups ?? undefined}
+                                        placeholder={filters.subjects.length > 0 ? 'All Topics for Subject' : 'All Topics'}
+                                        disabled={!availableTopics.length}
+                                    />
+                                    <MultiSelect
+                                        label="Year"
+                                        selected={filters.years}
+                                        onChange={handleYearsChange}
+                                        options={availableYears}
+                                        placeholder="All Years"
+                                    />
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center pt-2" style={{ borderTop: '1px solid var(--border)' }}>
@@ -685,7 +752,7 @@ const Quiz: React.FC = () => {
 
                 {/* ── Upload CSV ── */}
                 {dataSource === 'upload' && (
-                    <div className="card mb-4 sm:mb-5 p-3 sm:p-4">
+                    <div className="card mb-4 sm:mb-5 p-3 sm:p-4 no-print">
                         <p style={{ ...labelStyle, marginBottom: '0.8rem' }}>Upload quiz CSV</p>
                         <label style={{
                             display: 'flex',
@@ -722,7 +789,7 @@ const Quiz: React.FC = () => {
 
                 {/* ── Start Quiz button ── */}
                 {dataSource !== null && (
-                    <div className="flex justify-center mb-6 sm:mb-8">
+                    <div className="flex justify-center mb-6 sm:mb-8 no-print">
                         <button
                             type="button"
                             onClick={startQuiz}
@@ -737,7 +804,7 @@ const Quiz: React.FC = () => {
 
                 {/* ── Active quiz ── */}
                 {!quizState.submitted && quizState.questions.length > 0 && (
-                    <div className="max-w-3xl mx-auto">
+                    <div className="max-w-3xl mx-auto no-print">
                         {/* Sticky progress bar */}
                         <div className="sticky-bar">
                             <div className="progress-track">
@@ -836,6 +903,26 @@ const Quiz: React.FC = () => {
                 {/* ── Results ── */}
                 {quizState.submitted && (
                     <div className="max-w-3xl mx-auto">
+
+                        {/* Print-only filter summary */}
+                        <div className="print-only card p-4 mb-5" style={{ fontSize: '0.85rem', lineHeight: 1.7 }}>
+                            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.6rem', color: 'var(--ink)' }}>
+                                Quiz Summary
+                            </h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.15rem 2rem', color: 'var(--ink)' }}>
+                                <span><strong>Source:</strong> {dataSource === 'builtin' ? 'Built-in UPSC PYQs' : 'Custom CSV'}</span>
+                                <span><strong>Total Questions:</strong> {totalQuestions}</span>
+                                {filters.paper && <span><strong>Paper:</strong> {filters.paper}</span>}
+                                {filters.subjects.length > 0 && <span><strong>Subjects:</strong> {filters.subjects.join(', ')}</span>}
+                                {filters.topics.length > 0 && <span><strong>Topics:</strong> {filters.topics.join(', ')}</span>}
+                                {filters.years.length > 0 && <span><strong>Years:</strong> {filters.years.join(', ')}</span>}
+                                {questionLimit && <span><strong>Question Limit:</strong> {questionLimit}</span>}
+                                {isRandom && <span><strong>Order:</strong> Random</span>}
+                                <span><strong>Score:</strong> {quizState.score} / {totalQuestions} ({percentage}%)</span>
+                                <span><strong>Date:</strong> {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                            </div>
+                        </div>
+
                         {/* Score card */}
                         <div className="card p-5 sm:p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
                             <div style={{ textAlign: 'center', minWidth: '8rem' }}>
@@ -855,9 +942,16 @@ const Quiz: React.FC = () => {
                                      'Keep going — every attempt builds familiarity with the syllabus.'}
                                 </p>
                             </div>
-                            <button type="button" onClick={startQuiz} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
-                                Retry
-                            </button>
+                            <div className="flex gap-2 no-print" style={{ alignSelf: 'flex-start' }}>
+                                <button type="button" onClick={startQuiz} className="btn btn-primary">
+                                    Retry
+                                </button>
+                                <button type="button" onClick={downloadAsPdf} className="btn btn-secondary">
+                                    {/* Download icon */}
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Download PDF
+                                </button>
+                            </div>
                         </div>
 
                         {/* Question review */}

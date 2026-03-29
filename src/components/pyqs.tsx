@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 // Import PapaParse from the installed npm package
 import Papa from 'papaparse';
+import MultiSelect, { type OptionGroup } from './MultiSelect';
 
 import { AdMob, BannerAdSize, BannerAdPosition} from '@capacitor-community/admob';
 // Interface for the Question data structure
@@ -22,13 +23,12 @@ interface Question {
     image_url?: string | null; // Added optional imageUrl
 }
 
-// Interface for filters remains the same
 interface Filters {
     paper: string;
-    subject: string;
-    topic: string;
-    year: string;
-    id: string; // Add ID to filters
+    subjects: string[];
+    topics: string[];
+    years: string[];
+    id: string;
 }
 
 // Helper function to shuffle an array (Fisher-Yates algorithm)
@@ -79,11 +79,7 @@ const Pyqs: React.FC = () => {
     const [allQuestions, setAllQuestions] = useState<Question[]>([]);
     const [isLoadingCsv, setIsLoadingCsv] = useState<boolean>(true);
     const [csvError, setCsvError] = useState<string | null>(null);
-    const [filters, setFilters] = useState<Filters>({ paper: '', subject: '', topic: '', year: '', id: '' });
-    const [availablePapers, setAvailablePapers] = useState<string[]>([]);
-    const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
-    const [availableTopics, setAvailableTopics] = useState<string[]>([]);
-    const [availableYears, setAvailableYears] = useState<string[]>([]);
+    const [filters, setFilters] = useState<Filters>({ paper: '', subjects: [], topics: [], years: [], id: '' });
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
     const [isRandom, setIsRandom] = useState<boolean>(false);
@@ -233,74 +229,44 @@ const Pyqs: React.FC = () => {
         fetchAndParseCsv();
     }, []);
 
-     // --- Derive Filter Options from Loaded Data ---
-     useEffect(() => {
-        if (isLoadingCsv || csvError) {
-             setAvailablePapers([]);
-             setAvailableSubjects([]);
-             setAvailableTopics([]);
-             setAvailableYears([]);
-             return;
-        }
-        if (allQuestions.length === 0) {
-            setAvailablePapers([]);
-            setAvailableSubjects([]);
-            setAvailableTopics([]);
-            setAvailableYears([]);
-            return;
-        }
+    // --- Derive Filter Options (computed, no side-effects needed) ---
+    const availablePapers = useMemo(() =>
+        Array.from(new Set(allQuestions.map(q => q.paper).filter((p): p is string => !!p))).sort(),
+        [allQuestions]
+    );
 
-        // Derive unique, sorted options - ensure filtering out null/undefined values
-        const papers = Array.from(new Set(allQuestions.map(q => q.paper).filter((p): p is string => !!p))).sort();
-        const years = Array.from(new Set(allQuestions.map(q => q.year).filter((y): y is string => !!y)))
-                      .sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+    const availableYears = useMemo(() =>
+        Array.from(new Set(allQuestions.map(q => q.year).filter((y): y is string => !!y)))
+            .sort((a, b) => parseInt(b, 10) - parseInt(a, 10)),
+        [allQuestions]
+    );
 
-        setAvailablePapers(papers);
-        setAvailableYears(years);
-        setIsLoadingCsv(false); // Mark loading complete
+    const availableSubjects = useMemo(() => {
+        const base = filters.paper ? allQuestions.filter(q => q.paper === filters.paper) : allQuestions;
+        return Array.from(new Set(base.map(q => q.subject).filter((s): s is string => !!s))).sort();
+    }, [allQuestions, filters.paper]);
 
-    }, [allQuestions, isLoadingCsv, csvError]);
+    const availableTopics = useMemo(() => {
+        let base = filters.paper ? allQuestions.filter(q => q.paper === filters.paper) : allQuestions;
+        if (filters.subjects.length > 0) {
+            base = base.filter(q => q.subject !== null && filters.subjects.includes(q.subject));
+        }
+        return Array.from(new Set(base.map(q => q.topic).filter((t): t is string => !!t))).sort();
+    }, [allQuestions, filters.paper, filters.subjects]);
 
-    // --- Derive Available Subjects based on Selected Paper ---
-    useEffect(() => {
-        if (isLoadingCsv || csvError || allQuestions.length === 0) {
-            setAvailableSubjects([]);
-            return;
-        }
-        let subjectsToShow: string[];
-        if (!filters.paper) {
-             subjectsToShow = Array.from(new Set(allQuestions.map(q => q.subject).filter((s): s is string => !!s))).sort();
-        } else {
-            subjectsToShow = Array.from(new Set(
-                allQuestions
-                    .filter(q => q.paper === filters.paper)
-                    .map(q => q.subject)
-                    .filter((s): s is string => !!s)
-            )).sort();
-        }
-        setAvailableSubjects(subjectsToShow);
-    }, [filters.paper, allQuestions, isLoadingCsv, csvError]);
-
-    // --- Derive Available Topics based on Selected Paper and Subject ---
-    useEffect(() => {
-         if (isLoadingCsv || csvError || allQuestions.length === 0) {
-            setAvailableTopics([]);
-            return;
-        }
-        let topicsToShow: string[];
-        const paperFilteredQuestions = filters.paper ? allQuestions.filter(q => q.paper === filters.paper) : allQuestions;
-        if (!filters.subject) {
-             topicsToShow = Array.from(new Set(paperFilteredQuestions.map(q => q.topic).filter((t): t is string => !!t))).sort();
-        } else {
-            topicsToShow = Array.from(new Set(
-                paperFilteredQuestions
-                    .filter(q => q.subject === filters.subject)
-                    .map(q => q.topic)
-                    .filter((t): t is string => !!t)
-            )).sort();
-        }
-         setAvailableTopics(topicsToShow);
-    }, [filters.paper, filters.subject, allQuestions, isLoadingCsv, csvError]);
+    // Group topics by subject — used when 2+ subjects are selected
+    const topicGroups = useMemo((): OptionGroup[] | null => {
+        if (filters.subjects.length < 2) return null;
+        const base = filters.paper ? allQuestions.filter(q => q.paper === filters.paper) : allQuestions;
+        return filters.subjects
+            .map(subject => ({
+                label: subject,
+                options: Array.from(new Set(
+                    base.filter(q => q.subject === subject).map(q => q.topic).filter((t): t is string => !!t)
+                )).sort(),
+            }))
+            .filter(g => g.options.length > 0);
+    }, [allQuestions, filters.paper, filters.subjects]);
 
 
     // --- Apply Filters, Search, and Randomization ---
@@ -316,18 +282,18 @@ const Pyqs: React.FC = () => {
 
         let filtered = [...allQuestions];
 
-        // Apply filters (ensure properties exist before filtering)
+        // Apply filters
         if (filters.paper) {
             filtered = filtered.filter(q => q.paper === filters.paper);
         }
-        if (filters.subject) {
-            filtered = filtered.filter(q => q.subject === filters.subject);
+        if (filters.subjects.length > 0) {
+            filtered = filtered.filter(q => q.subject !== null && filters.subjects.includes(q.subject));
         }
-        if (filters.topic) {
-            filtered = filtered.filter(q => q.topic === filters.topic);
+        if (filters.topics.length > 0) {
+            filtered = filtered.filter(q => q.topic !== null && filters.topics.includes(q.topic));
         }
-        if (filters.year) {
-            filtered = filtered.filter(q => q.year === filters.year);
+        if (filters.years.length > 0) {
+            filtered = filtered.filter(q => q.year !== null && filters.years.includes(q.year));
         }
         if (filters.id) {
             const searchId = parseInt(filters.id, 10);
@@ -371,16 +337,31 @@ const Pyqs: React.FC = () => {
     // --- Event Handlers ---
     const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFilters(prevFilters => {
-            const newFilters = { ...prevFilters, [name]: value };
-            if (name === 'paper') {
-                newFilters.subject = '';
-                newFilters.topic = '';
-            } else if (name === 'subject') {
-                newFilters.topic = '';
-            }
-            return newFilters;
+        setFilters(prev => {
+            if (name === 'paper') return { ...prev, paper: value, subjects: [], topics: [] };
+            return { ...prev, [name]: value };
         });
+    };
+
+    const handleSubjectsChange = (subjects: string[]) => {
+        setFilters(prev => {
+            const base = prev.paper ? allQuestions.filter(q => q.paper === prev.paper) : allQuestions;
+            const validTopics = new Set(
+                base
+                    .filter(q => subjects.length === 0 || (q.subject !== null && subjects.includes(q.subject)))
+                    .map(q => q.topic)
+                    .filter((t): t is string => !!t)
+            );
+            return { ...prev, subjects, topics: prev.topics.filter(t => validTopics.has(t)) };
+        });
+    };
+
+    const handleTopicsChange = (topics: string[]) => {
+        setFilters(prev => ({ ...prev, topics }));
+    };
+
+    const handleYearsChange = (years: string[]) => {
+        setFilters(prev => ({ ...prev, years }));
     };
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -432,16 +413,6 @@ const Pyqs: React.FC = () => {
             setJumpToInput('');
         }
     };
-
-    // --- Memoized Render Helpers ---
-    const renderSelectOptions = useMemo(() => (options: string[], defaultLabel: string) => (
-        <>
-            <option value="">{defaultLabel}</option>
-            {options && options.map(option => (
-                <option key={option} value={option}>{option}</option>
-            ))}
-        </>
-    ), []);
 
     const currentQuestion = displayedQuestions.length > 0 ? displayedQuestions[currentIndex] : null;
     const isCurrentSubmitted = submittedIndices.has(currentIndex);
@@ -683,38 +654,56 @@ const Pyqs: React.FC = () => {
                             )}
                             {!isLoadingCsv && !csvError && allQuestions.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                                    {[
-                                        { id: 'paper', label: 'Paper', options: availablePapers, placeholder: 'All Papers' },
-                                        { id: 'subject', label: 'Subject', options: availableSubjects, placeholder: filters.paper ? 'All Subjects for Paper' : 'All Subjects', disabled: availableSubjects.length === 0 },
-                                        { id: 'topic', label: 'Topic', options: availableTopics, placeholder: filters.subject ? 'All Topics for Subject' : 'All Topics', disabled: availableTopics.length === 0 },
-                                        { id: 'year', label: 'Year', options: availableYears, placeholder: 'All Years' },
-                                    ].map(({ id, label, options, placeholder, disabled }) => (
-                                        <div key={id}>
-                                            <label htmlFor={id} style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-muted)', marginBottom: '0.3rem' }}>
-                                                {label}
-                                            </label>
-                                            <select
-                                                id={id}
-                                                name={id}
-                                                value={(filters as any)[id]}
-                                                onChange={handleFilterChange}
-                                                disabled={disabled}
-                                                style={{
-                                                    width: '100%',
-                                                    padding: '0.45rem 0.7rem',
-                                                    fontSize: '0.85rem',
-                                                    border: '1.5px solid var(--border)',
-                                                    borderRadius: '6px',
-                                                    background: disabled ? 'var(--paper-alt)' : '#fff',
-                                                    color: 'var(--ink)',
-                                                    fontFamily: "'DM Sans', sans-serif",
-                                                    cursor: disabled ? 'not-allowed' : 'pointer',
-                                                }}
-                                            >
-                                                {renderSelectOptions(options, placeholder ?? '')}
-                                            </select>
-                                        </div>
-                                    ))}
+                                    {/* Paper — single select (top-level grouping) */}
+                                    <div>
+                                        <label htmlFor="paper" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-muted)', marginBottom: '0.3rem' }}>
+                                            Paper
+                                        </label>
+                                        <select
+                                            id="paper"
+                                            name="paper"
+                                            value={filters.paper}
+                                            onChange={handleFilterChange}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.45rem 0.7rem',
+                                                fontSize: '0.85rem',
+                                                border: '1.5px solid var(--border)',
+                                                borderRadius: '6px',
+                                                background: '#fff',
+                                                color: 'var(--ink)',
+                                                fontFamily: "'DM Sans', sans-serif",
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            <option value="">All Papers</option>
+                                            {availablePapers.map(p => <option key={p} value={p}>{p}</option>)}
+                                        </select>
+                                    </div>
+                                    <MultiSelect
+                                        label="Subject"
+                                        selected={filters.subjects}
+                                        onChange={handleSubjectsChange}
+                                        options={availableSubjects}
+                                        placeholder={filters.paper ? 'All Subjects for Paper' : 'All Subjects'}
+                                        disabled={availableSubjects.length === 0}
+                                    />
+                                    <MultiSelect
+                                        label="Topic"
+                                        selected={filters.topics}
+                                        onChange={handleTopicsChange}
+                                        options={topicGroups ? undefined : availableTopics}
+                                        groups={topicGroups ?? undefined}
+                                        placeholder={filters.subjects.length > 0 ? 'All Topics for Subject' : 'All Topics'}
+                                        disabled={availableTopics.length === 0}
+                                    />
+                                    <MultiSelect
+                                        label="Year"
+                                        selected={filters.years}
+                                        onChange={handleYearsChange}
+                                        options={availableYears}
+                                        placeholder="All Years"
+                                    />
                                 </div>
                             )}
                         </div>
