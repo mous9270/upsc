@@ -423,26 +423,6 @@ const Pyqs: React.FC = () => {
         <>
             {/* ─── Google Fonts import ─── */}
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
-
-                :root {
-                    --saffron:   #1A56A0;
-                    --saffron-lt:#E8F0FA;
-                    --ink:       #111827;
-                    --ink-muted: #4B5563;
-                    --paper:     #F7F9FC;
-                    --paper-alt: #EEF2F8;
-                    --border:    #D1DCF0;
-                    --green:     #2E7D52;
-                    --green-lt:  #EAF5EF;
-                    --red:       #B83232;
-                    --red-lt:    #FCEAEA;
-                    --blue:      #1A56A0;
-                    --blue-lt:   #E8F0FA;
-                }
-
-                body { background: var(--paper); color: var(--ink); }
-
                 /* ── Title ── */
                 .page-title {
                     font-family: 'Playfair Display', serif;
@@ -492,8 +472,8 @@ const Pyqs: React.FC = () => {
                     box-shadow: 0 2px 8px rgba(26,86,160,0.22);
                 }
                 .btn-primary:hover {
-                    background: #133F7A;
-                    border-color: #133F7A;
+                    background: var(--blue-hover);
+                    border-color: var(--blue-hover);
                     box-shadow: 0 4px 14px rgba(26,86,160,0.32);
                 }
 
@@ -512,7 +492,7 @@ const Pyqs: React.FC = () => {
                 .btn-ghost-green {
                     background: var(--green-lt);
                     color: var(--green);
-                    border-color: #A8D5BC;
+                    border-color: var(--border-green-soft);
                 }
                 .btn-ghost-green:hover {
                     background: #D6EFE3;
@@ -546,8 +526,8 @@ const Pyqs: React.FC = () => {
                     box-shadow: 0 2px 8px rgba(26,86,160,0.2);
                 }
                 .btn-submit:hover:not(:disabled) {
-                    background: #133F7A;
-                    border-color: #133F7A;
+                    background: var(--blue-hover);
+                    border-color: var(--blue-hover);
                 }
                 .btn-submit:disabled {
                     opacity: 0.4;
@@ -569,7 +549,7 @@ const Pyqs: React.FC = () => {
 
                 /* ── Card / surface ── */
                 .card {
-                    background: #fff;
+                    background: var(--surface);
                     border: 1px solid var(--border);
                     border-radius: 10px;
                     box-shadow: 0 1px 6px rgba(0,0,0,0.06);
@@ -645,7 +625,7 @@ const Pyqs: React.FC = () => {
                         <div className="p-3 sm:p-4" style={{ borderTop: '1px solid var(--border)' }}>
                             {isLoadingCsv && <p className="text-center" style={{ color: 'var(--blue)' }}>Loading question data…</p>}
                             {!isLoadingCsv && csvError && (
-                                <p className="text-center p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid #F4BCBC' }}>
+                                <p className="text-center p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid var(--border-red-tint)' }}>
                                     Error: {csvError}
                                 </p>
                             )}
@@ -670,7 +650,7 @@ const Pyqs: React.FC = () => {
                                                 fontSize: '0.85rem',
                                                 border: '1.5px solid var(--border)',
                                                 borderRadius: '6px',
-                                                background: '#fff',
+                                                background: 'var(--surface)',
                                                 color: 'var(--ink)',
                                                 fontFamily: "'DM Sans', sans-serif",
                                                 cursor: 'pointer',
@@ -733,7 +713,7 @@ const Pyqs: React.FC = () => {
                                 borderRadius: '6px',
                                 fontFamily: "'DM Sans', sans-serif",
                                 color: 'var(--ink)',
-                                background: '#fff',
+                                background: 'var(--surface)',
                             }}
                         />
                     </div>
@@ -778,6 +758,8 @@ const Pyqs: React.FC = () => {
                                     textAlign: 'center',
                                     fontSize: '0.8rem',
                                     fontFamily: "'DM Sans', sans-serif",
+                                    background: 'var(--surface)',
+                                    color: 'var(--ink)',
                                 }}
                             />
                             <button
@@ -804,6 +786,8 @@ const Pyqs: React.FC = () => {
                                     textAlign: 'center',
                                     fontSize: '0.8rem',
                                     fontFamily: "'DM Sans', sans-serif",
+                                    background: 'var(--surface)',
+                                    color: 'var(--ink)',
                                 }}
                             />
                         </div>
@@ -861,11 +845,11 @@ const Pyqs: React.FC = () => {
                                 const isSelected = selectedOption === optLetter;
                                 const isCorrect = currentQuestion.correct_option?.toUpperCase() === optLetter;
 
-                                let bg = '#fff', border = 'var(--border)', color = 'var(--ink)', cursor = 'pointer';
+                                let bg = 'var(--surface)', border = 'var(--border)', color = 'var(--ink)', cursor = 'pointer';
                                 if (isCurrentSubmitted) {
                                     cursor = 'not-allowed';
-                                    if (isCorrect) { bg = 'var(--green-lt)'; border = '#83C8A4'; color = 'var(--green)'; }
-                                    else if (isSelected) { bg = 'var(--red-lt)'; border = '#F4BCBC'; color = 'var(--red)'; }
+                                    if (isCorrect) { bg = 'var(--green-lt)'; border = 'var(--border-green-strong)'; color = 'var(--green)'; }
+                                    else if (isSelected) { bg = 'var(--red-lt)'; border = 'var(--border-red-tint)'; color = 'var(--red)'; }
                                     else { bg = 'var(--paper-alt)'; color = 'var(--ink-muted)'; }
                                 } else if (isSelected) {
                                     bg = 'var(--saffron-lt)'; border = 'var(--saffron)'; color = 'var(--saffron)';
@@ -901,7 +885,7 @@ const Pyqs: React.FC = () => {
                         {/* Explanation */}
                         {isCurrentSubmitted && (
                             currentQuestion.explanation ? (
-                                <div className="mt-3 p-3 rounded" style={{ background: 'var(--blue-lt)', border: '1px solid #B3CEEB' }}>
+                                <div className="mt-3 p-3 rounded" style={{ background: 'var(--blue-lt)', border: '1px solid var(--border-blue-tint)' }}>
                                     <p style={{ fontWeight: 700, color: 'var(--blue)', marginBottom: '0.4rem', fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Explanation</p>
                                     <p className="whitespace-pre-line" style={{ fontSize: '0.85rem', color: 'var(--ink)', lineHeight: 1.6 }}>{formatText(currentQuestion.explanation)}</p>
                                 </div>

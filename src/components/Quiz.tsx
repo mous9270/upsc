@@ -396,7 +396,7 @@ const Quiz: React.FC = () => {
         fontSize: '0.85rem',
         border: '1.5px solid var(--border)',
         borderRadius: '6px',
-        background: '#fff',
+        background: 'var(--surface)',
         color: 'var(--ink)',
         fontFamily: "'DM Sans', sans-serif",
         cursor: 'pointer',
@@ -418,24 +418,6 @@ const Quiz: React.FC = () => {
 
             {/* ─── Design system styles (same as Pyqs.tsx) ─── */}
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
-
-                :root {
-                    --blue:      #1A56A0;
-                    --blue-lt:   #E8F0FA;
-                    --ink:       #111827;
-                    --ink-muted: #4B5563;
-                    --paper:     #F7F9FC;
-                    --paper-alt: #EEF2F8;
-                    --border:    #D1DCF0;
-                    --green:     #2E7D52;
-                    --green-lt:  #EAF5EF;
-                    --red:       #B83232;
-                    --red-lt:    #FCEAEA;
-                }
-
-                body { background: var(--paper); color: var(--ink); }
-
                 .page-title {
                     font-family: 'Playfair Display', serif;
                     font-size: clamp(1.7rem, 5vw, 2.6rem);
@@ -489,8 +471,8 @@ const Quiz: React.FC = () => {
                     box-shadow: 0 2px 8px rgba(26,86,160,0.22);
                 }
                 .btn-primary:hover {
-                    background: #133F7A;
-                    border-color: #133F7A;
+                    background: var(--blue-hover);
+                    border-color: var(--blue-hover);
                     box-shadow: 0 4px 14px rgba(26,86,160,0.32);
                 }
                 .btn-primary:disabled {
@@ -541,7 +523,7 @@ const Quiz: React.FC = () => {
                 .btn-sm { font-size: 0.76rem; padding: 0.35rem 0.8rem; }
 
                 .card {
-                    background: #fff;
+                    background: var(--surface);
                     border: 1px solid var(--border);
                     border-radius: 10px;
                     box-shadow: 0 1px 6px rgba(0,0,0,0.06);
@@ -552,7 +534,7 @@ const Quiz: React.FC = () => {
                     position: sticky;
                     top: 0;
                     z-index: 10;
-                    background: #fff;
+                    background: var(--surface);
                     border-bottom: 1px solid var(--border);
                     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
                     border-radius: 8px;
@@ -662,7 +644,7 @@ const Quiz: React.FC = () => {
                             <p className="text-sm mb-2" style={{ color: 'var(--blue)' }}>Loading questions…</p>
                         )}
                         {error && (
-                            <p className="text-sm mb-2 p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid #F4BCBC' }}>
+                            <p className="text-sm mb-2 p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid var(--border-red-tint)' }}>
                                 {error}
                             </p>
                         )}
@@ -740,6 +722,7 @@ const Quiz: React.FC = () => {
                                                 borderRadius: '6px',
                                                 fontSize: '0.85rem',
                                                 fontFamily: "'DM Sans', sans-serif",
+                                                background: 'var(--surface)',
                                                 color: 'var(--ink)',
                                             }}
                                         />
@@ -775,7 +758,7 @@ const Quiz: React.FC = () => {
 
                         {isLoading && <p className="mt-2 text-sm" style={{ color: 'var(--blue)' }}>Parsing CSV…</p>}
                         {error && (
-                            <p className="mt-2 text-sm p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid #F4BCBC' }}>
+                            <p className="mt-2 text-sm p-2 rounded" style={{ color: 'var(--red)', background: 'var(--red-lt)', border: '1px solid var(--border-red-tint)' }}>
                                 {error}
                             </p>
                         )}
@@ -871,7 +854,7 @@ const Quiz: React.FC = () => {
                                                         padding: '0.6rem 0.85rem',
                                                         borderRadius: '7px',
                                                         border: `1.5px solid ${isSelected ? 'var(--blue)' : 'var(--border)'}`,
-                                                        background: isSelected ? 'var(--blue-lt)' : '#fff',
+                                                        background: isSelected ? 'var(--blue-lt)' : 'var(--surface)',
                                                         color: isSelected ? 'var(--blue)' : 'var(--ink)',
                                                         cursor: 'pointer',
                                                         textAlign: 'left',
@@ -968,8 +951,8 @@ const Quiz: React.FC = () => {
                                             <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1rem', fontWeight: 700, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                 Question {index + 1}
                                                 {isCorrectAnswer
-                                                    ? <span style={{ fontSize: '0.75rem', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, background: 'var(--green-lt)', color: 'var(--green)', padding: '0.15rem 0.55rem', borderRadius: '20px', border: '1px solid #A8D5BC' }}>✓ Correct</span>
-                                                    : <span style={{ fontSize: '0.75rem', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, background: 'var(--red-lt)', color: 'var(--red)', padding: '0.15rem 0.55rem', borderRadius: '20px', border: '1px solid #F4BCBC' }}>✗ Incorrect</span>
+                                                    ? <span style={{ fontSize: '0.75rem', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, background: 'var(--green-lt)', color: 'var(--green)', padding: '0.15rem 0.55rem', borderRadius: '20px', border: '1px solid var(--border-green-soft)' }}>✓ Correct</span>
+                                                    : <span style={{ fontSize: '0.75rem', fontFamily: "'DM Sans', sans-serif", fontWeight: 600, background: 'var(--red-lt)', color: 'var(--red)', padding: '0.15rem 0.55rem', borderRadius: '20px', border: '1px solid var(--border-red-tint)' }}>✗ Incorrect</span>
                                                 }
                                             </h3>
                                             <span style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', background: 'var(--paper-alt)', padding: '0.18rem 0.6rem', borderRadius: '20px', border: '1px solid var(--border)' }}>
@@ -1003,9 +986,9 @@ const Quiz: React.FC = () => {
                                                 const isCorrect = correctLetter === letter;
                                                 const isUserSelected = selected === letter;
 
-                                                let bg = '#fff', border = 'var(--border)', color = 'var(--ink)';
-                                                if (isCorrect) { bg = 'var(--green-lt)'; border = '#83C8A4'; color = 'var(--green)'; }
-                                                else if (isUserSelected && !isCorrect) { bg = 'var(--red-lt)'; border = '#F4BCBC'; color = 'var(--red)'; }
+                                                let bg = 'var(--surface)', border = 'var(--border)', color = 'var(--ink)';
+                                                if (isCorrect) { bg = 'var(--green-lt)'; border = 'var(--border-green-strong)'; color = 'var(--green)'; }
+                                                else if (isUserSelected && !isCorrect) { bg = 'var(--red-lt)'; border = 'var(--border-red-tint)'; color = 'var(--red)'; }
 
                                                 return (
                                                     <div
@@ -1033,7 +1016,7 @@ const Quiz: React.FC = () => {
 
                                         {/* Explanation */}
                                         {question.explanation && (
-                                            <div className="p-3 rounded" style={{ background: 'var(--blue-lt)', border: '1px solid #B3CEEB' }}>
+                                            <div className="p-3 rounded" style={{ background: 'var(--blue-lt)', border: '1px solid var(--border-blue-tint)' }}>
                                                 <p style={{ fontWeight: 700, color: 'var(--blue)', marginBottom: '0.4rem', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Explanation</p>
                                                 <p className="whitespace-pre-line" style={{ fontSize: '0.85rem', color: 'var(--ink)', lineHeight: 1.6 }}>{formatText(question.explanation)}</p>
                                             </div>

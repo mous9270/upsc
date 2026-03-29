@@ -7,24 +7,6 @@ const About: React.FC = () => {
       {/* <Navigation /> */}
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
-
-        :root {
-            --blue:      #1A56A0;
-            --blue-lt:   #E8F0FA;
-            --ink:       #111827;
-            --ink-muted: #4B5563;
-            --paper:     #F7F9FC;
-            --paper-alt: #EEF2F8;
-            --border:    #D1DCF0;
-            --green:     #2E7D52;
-            --green-lt:  #EAF5EF;
-            --red:       #B83232;
-            --red-lt:    #FCEAEA;
-        }
-
-        body { background: var(--paper); color: var(--ink); }
-
         .page-title {
             font-family: 'Playfair Display', serif;
             font-size: clamp(1.7rem, 5vw, 2.6rem);
@@ -78,8 +60,8 @@ const About: React.FC = () => {
             box-shadow: 0 2px 8px rgba(26,86,160,0.22);
         }
         .btn-primary:hover {
-            background: #133F7A;
-            border-color: #133F7A;
+            background: var(--blue-hover);
+            border-color: var(--blue-hover);
             box-shadow: 0 4px 14px rgba(26,86,160,0.32);
         }
 
@@ -94,7 +76,7 @@ const About: React.FC = () => {
         }
 
         .card {
-            background: #fff;
+            background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 10px;
             box-shadow: 0 1px 6px rgba(0,0,0,0.06);
@@ -125,7 +107,7 @@ const About: React.FC = () => {
             padding: 1rem 0.75rem;
             border-radius: 8px;
             border: 1.5px solid var(--border);
-            background: #fff;
+            background: var(--surface);
             color: var(--ink);
             font-family: 'DM Sans', sans-serif;
             font-size: 0.82rem;

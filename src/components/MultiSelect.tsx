@@ -66,7 +66,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                     fontSize: '0.85rem',
                     border: `1.5px solid ${open ? 'var(--blue, #1A56A0)' : 'var(--border, #D1DCF0)'}`,
                     borderRadius: '6px',
-                    background: disabled ? 'var(--paper-alt, #EEF2F8)' : '#fff',
+                    background: disabled ? 'var(--paper-alt, #EEF2F8)' : 'var(--surface, #fff)',
                     color: selected.length ? 'var(--ink, #111827)' : 'var(--ink-muted, #4B5563)',
                     fontFamily: "'DM Sans', sans-serif",
                     cursor: disabled ? 'not-allowed' : 'pointer',
@@ -103,7 +103,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
             {open && (
                 <div style={{
                     position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-                    background: '#fff',
+                    background: 'var(--surface, #fff)',
                     border: '1.5px solid var(--blue, #1A56A0)',
                     borderRadius: '8px',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
@@ -115,7 +115,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                     <div style={{
                         display: 'flex', gap: '0.75rem', padding: '0.45rem 0.75rem',
                         borderBottom: '1px solid var(--border, #D1DCF0)',
-                        background: '#fff', position: 'sticky', top: 0,
+                        background: 'var(--surface, #fff)', position: 'sticky', top: 0,
                     }}>
                         <button
                             type="button"

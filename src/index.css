@@ -1,2 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+/* ── Design tokens ── */
+:root {
+    /* Brand */
+    --blue:                #1A56A0;
+    --blue-lt:             #E8F0FA;
+    --blue-hover:          #133F7A;
+    --saffron:             #1A56A0; /* alias used in pyqs.tsx */
+    --saffron-lt:          #E8F0FA;
+    /* Text */
+    --ink:                 #111827;
+    --ink-muted:           #4B5563;
+    /* Backgrounds */
+    --paper:               #F7F9FC;
+    --paper-alt:           #EEF2F8;
+    --surface:             #ffffff;  /* card / input surfaces */
+    /* Borders */
+    --border:              #D1DCF0;
+    --border-blue-tint:    #B3CEEB;
+    --border-green-strong: #83C8A4;
+    --border-green-soft:   #A8D5BC;
+    --border-red-tint:     #F4BCBC;
+    /* Status */
+    --green:               #2E7D52;
+    --green-lt:            #EAF5EF;
+    --red:                 #B83232;
+    --red-lt:              #FCEAEA;
+}
+
+html.dark {
+    --blue:                #4B8FD4;
+    --blue-lt:             #1A2540;
+    --blue-hover:          #6BAEE0;
+    --saffron:             #4B8FD4;
+    --saffron-lt:          #1A2540;
+    --ink:                 #E2E8F0;
+    --ink-muted:           #8899B0;
+    --paper:               #0F1117;
+    --paper-alt:           #161B27;
+    --surface:             #1D2233;
+    --border:              #2A3247;
+    --border-blue-tint:    #253560;
+    --border-green-strong: #1E5038;
+    --border-green-soft:   #1A4030;
+    --border-red-tint:     #5A2020;
+    --green:               #4CAF7D;
+    --green-lt:            #152B20;
+    --red:                 #E05555;
+    --red-lt:              #2B1515;
+}
+
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.2s, color 0.2s;
+}
