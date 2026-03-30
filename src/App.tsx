@@ -25,8 +25,8 @@ const App: React.FC = () => {
         title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         style={{
           position: 'fixed',
-          bottom: '1.25rem',
-          right: '1.25rem',
+          top: '0.65rem',
+          right: '1rem',
           zIndex: 1000,
           width: '2.5rem',
           height: '2.5rem',
