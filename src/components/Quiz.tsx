@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
 import MultiSelect, { type OptionGroup } from './MultiSelect';
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { useNavigate, Link } from 'react-router-dom';
 // import Navigation from './Navigation';
 
@@ -155,6 +156,7 @@ const Quiz: React.FC = () => {
     const [questionLimit, setQuestionLimit] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [pdfLoading, setPdfLoading] = useState<boolean>(false);
 
     useEffect(() => {
         setAllQuestions([]);
@@ -303,8 +305,97 @@ const Quiz: React.FC = () => {
         }));
     };
 
-    const downloadAsPdf = (): void => {
-        window.print();
+    const downloadAsPdf = async (): Promise<void> => {
+        if (!Capacitor.isNativePlatform()) {
+            window.print();
+            return;
+        }
+
+        setPdfLoading(true);
+        try {
+            const { jsPDF } = await import('jspdf');
+            const { Filesystem, Directory } = await import('@capacitor/filesystem');
+            const { Share } = await import('@capacitor/share');
+
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            const margin = 15;
+            const col = pageW - margin * 2;
+            let y = 20;
+
+            const write = (text: string, size: number, style: 'normal' | 'bold' = 'normal', r = 0, g = 0, b = 0) => {
+                doc.setFontSize(size);
+                doc.setFont('helvetica', style);
+                doc.setTextColor(r, g, b);
+                const lines = doc.splitTextToSize(text, col) as string[];
+                const lineH = size * 0.4;
+                if (y + lines.length * lineH > pageH - margin) {
+                    doc.addPage();
+                    y = margin;
+                }
+                doc.text(lines, margin, y);
+                y += lines.length * lineH + 1.5;
+            };
+
+            const score = quizState.score;
+            const total = quizState.questions.length;
+            const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+
+            write('UPSC Quiz Results', 18, 'bold', 26, 86, 160);
+            y += 2;
+            write(`Score: ${score} / ${total}  (${pct}%)`, 13, 'bold');
+            write(new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }), 9, 'normal', 120, 120, 120);
+            y += 6;
+
+            quizState.questions.forEach((q, i) => {
+                const selected = quizState.selectedAnswers[i]?.toUpperCase();
+                const correct = q.correct_option?.toUpperCase();
+                const isCorrect = selected === correct;
+
+                const meta = [q.subject, q.topic, q.year].filter(Boolean).join('  |  ');
+                if (meta) write(meta, 8, 'normal', 130, 130, 130);
+
+                write(`Q${i + 1}.  ${q.question ?? ''}`, 10, 'bold');
+
+                if (q.passage) write(`Passage: ${q.passage}`, 8, 'normal', 90, 90, 90);
+
+                (['A', 'B', 'C', 'D'] as const).forEach(letter => {
+                    const opt = q[`option_${letter.toLowerCase()}` as 'option_a' | 'option_b' | 'option_c' | 'option_d'];
+                    if (!opt) return;
+                    const isAns = letter === correct;
+                    const isSel = letter === selected;
+                    const prefix = isAns ? '(correct) ' : isSel && !isCorrect ? '(your ans) ' : '';
+                    const [r, g, b]: [number, number, number] = isAns ? [46, 125, 82] : isSel && !isCorrect ? [184, 50, 50] : [50, 50, 50];
+                    write(`  ${letter})  ${prefix}${opt}`, 9, isAns || isSel ? 'bold' : 'normal', r, g, b);
+                });
+
+                if (!isCorrect && correct) write(`Correct answer: ${correct}`, 9, 'bold', 46, 125, 82);
+                if (q.explanation) write(`Explanation: ${q.explanation}`, 9, 'normal', 70, 70, 70);
+
+                y += 4;
+                if (y > pageH - margin) { doc.addPage(); y = margin; }
+            });
+
+            const base64 = doc.output('datauristring').split(',')[1];
+            const fileName = `upsc-quiz-${Date.now()}.pdf`;
+
+            const file = await Filesystem.writeFile({
+                path: fileName,
+                data: base64,
+                directory: Directory.Cache,
+            });
+
+            await Share.share({
+                title: 'UPSC Quiz Results',
+                url: file.uri,
+                dialogTitle: 'Save or share your quiz results',
+            });
+        } catch (err) {
+            console.error('PDF export failed', err);
+        } finally {
+            setPdfLoading(false);
+        }
     };
 
     const submitQuiz = (): void => {
@@ -929,10 +1020,10 @@ const Quiz: React.FC = () => {
                                 <button type="button" onClick={startQuiz} className="btn btn-primary">
                                     Retry
                                 </button>
-                                <button type="button" onClick={downloadAsPdf} className="btn btn-secondary">
+                                <button type="button" onClick={() => { void downloadAsPdf(); }} disabled={pdfLoading} className="btn btn-secondary">
                                     {/* Download icon */}
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    Download PDF
+                                    {pdfLoading ? 'Generating…' : 'Download PDF'}
                                 </button>
                             </div>
                         </div>
