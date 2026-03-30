@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 // Import PapaParse from the installed npm package
 import Papa from 'papaparse';
 import MultiSelect, { type OptionGroup } from './MultiSelect';
@@ -595,14 +596,14 @@ const Pyqs: React.FC = () => {
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.34a1 1 0 0 1-1 1H7.477a1 1 0 0 1-1-1V8.66a1 1 0 0 1 1-1h9.046a1 1 0 0 1 1 1v6.68zM14.86 2.19l1.09-1.89a.25.25 0 0 0-.43-.25l-1.1 1.91A6.94 6.94 0 0 0 12 1.6c-.85 0-1.67.13-2.44.36L8.46.05a.25.25 0 0 0-.43.25L9.1 2.19A7.01 7.01 0 0 0 5 8.5h14a7.01 7.01 0 0 0-4.14-6.31zM9.5 6a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5zm5 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5z"/></svg>
                             Android App
                         </a>
-                        <a href="/about" className="btn btn-secondary">
+                        <Link to="/about" className="btn btn-secondary">
                             About Me
-                        </a>
-                        <a href="/quiz" className="btn btn-primary">
+                        </Link>
+                        <Link to="/quiz" className="btn btn-primary">
                             {/* Quiz icon */}
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             Take Quiz
-                        </a>
+                        </Link>
                     </div>
                 </div>
 

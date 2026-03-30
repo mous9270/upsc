@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const Navigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
@@ -8,27 +9,27 @@ const Navigation: React.FC = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           {/* Back to home */}
-          <a
-            href="/"
+          <Link
+            to="/"
             className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
           >
             <span className="mr-1 text-lg" aria-hidden="true">
               ←
             </span>
             <span>Back to Home</span>
-          </a>
+          </Link>
 
           {/* Desktop nav */}
           <nav className="hidden sm:flex items-center gap-4 text-sm text-gray-700">
-            <a href="/" className="hover:text-gray-900">
+            <Link to="/" className="hover:text-gray-900">
               Home
-            </a>
-            <a href="/quiz" className="hover:text-gray-900">
+            </Link>
+            <Link to="/quiz" className="hover:text-gray-900">
               Quiz
-            </a>
-            <a href="/about" className="hover:text-gray-900">
+            </Link>
+            <Link to="/about" className="hover:text-gray-900">
               About
-            </a>
+            </Link>
           </nav>
 
           {/* Mobile hamburger */}
@@ -51,27 +52,27 @@ const Navigation: React.FC = () => {
         {mobileMenuOpen && (
           <div className="sm:hidden mt-2">
             <div className="max-w-4xl mx-auto bg-white border rounded-lg shadow-sm divide-y">
-              <a
-                href="/"
+              <Link
+                to="/"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Home
-              </a>
-              <a
-                href="/about"
+              </Link>
+              <Link
+                to="/about"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 About
-              </a>
-              <a
-                href="/quiz"
+              </Link>
+              <Link
+                to="/quiz"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Quiz
-              </a>
+              </Link>
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 // import Navigation from './Navigation';
 
 const About: React.FC = () => {
@@ -143,9 +144,9 @@ const About: React.FC = () => {
                 <h1 className="page-title">About <span>Me</span></h1>
                 <div className="title-rule" />
               </div>
-              <a href="/" className="btn btn-secondary" style={{ alignSelf: 'flex-start', fontSize: '0.8rem', padding: '0.42rem 0.9rem' }}>
+              <Link to="/" className="btn btn-secondary" style={{ alignSelf: 'flex-start', fontSize: '0.8rem', padding: '0.42rem 0.9rem' }}>
                 ← Back to PYQs
-              </a>
+              </Link>
             </div>
 
             {/* ── 1. Hero / Intro ── */}

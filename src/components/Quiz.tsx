@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
 import MultiSelect, { type OptionGroup } from './MultiSelect';
 import { App } from '@capacitor/app';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 // import Navigation from './Navigation';
 
 type DataSource = 'builtin' | 'upload' | null;
@@ -599,9 +599,9 @@ const Quiz: React.FC = () => {
                         </h1>
                         <div className="title-rule" />
                     </div>
-                    <a href="/" className="btn btn-secondary btn-sm no-print" style={{ alignSelf: 'flex-start' }}>
+                    <Link to="/" className="btn btn-secondary btn-sm no-print" style={{ alignSelf: 'flex-start' }}>
                         ← Back to PYQs
-                    </a>
+                    </Link>
                 </div>
 
                 {/* ── Data source toggle ── */}
