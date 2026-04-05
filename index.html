@@ -5,7 +5,8 @@
     <script>
       (function() {
         var stored = localStorage.getItem('theme');
-        var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // Default to light theme; only go dark if the user has explicitly chosen it.
+        var dark = stored === 'dark';
         if (dark) document.documentElement.classList.add('dark');
         // Detect Capacitor native context early so CSS can apply reliable safe-area fallbacks.
         // env(safe-area-inset-top) often returns 0 in Android WebView until layout is done,

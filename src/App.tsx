@@ -7,8 +7,8 @@ import About from './components/About';
 const App: React.FC = () => {
   const [dark, setDark] = useState<boolean>(() => {
     const stored = localStorage.getItem('theme');
-    if (stored) return stored === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Default to light; only dark if the user has explicitly saved that preference.
+    return stored === 'dark';
   });
 
   useEffect(() => {
