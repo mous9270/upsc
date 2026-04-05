@@ -167,6 +167,7 @@ const Quiz: React.FC = () => {
         setError(null);
     }, [dataSource]);
 
+    const isNative = !!(window as any).Capacitor;
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -623,7 +624,7 @@ const Quiz: React.FC = () => {
                 /* Sticky progress bar */
                 .sticky-bar {
                     position: sticky;
-                    top: 0;
+                    top: env(safe-area-inset-top, 0px);
                     z-index: 10;
                     background: var(--surface);
                     border-bottom: 1px solid var(--border);
@@ -679,7 +680,13 @@ const Quiz: React.FC = () => {
 
             <div
                 className="container mx-auto px-3 sm:px-5 py-3 sm:py-5"
-                style={{ fontFamily: "'DM Sans', sans-serif" }}
+                style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    paddingTop: isNative
+                        ? 'calc(min(max(env(safe-area-inset-top, 0px), 32px), 52px) + 0.5rem)'
+                        : '0.75rem',
+                    paddingBottom: '0.75rem',
+                }}
             >
                 {/* ── Header ── */}
                 <div className="mb-5 sm:mb-7 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">

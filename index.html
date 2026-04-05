@@ -7,10 +7,13 @@
         var stored = localStorage.getItem('theme');
         var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (dark) document.documentElement.classList.add('dark');
+        // Detect Capacitor native context early so CSS can apply reliable safe-area fallbacks.
+        // env(safe-area-inset-top) often returns 0 in Android WebView until layout is done,
+        // so we use max() with a fixed 32px minimum in .cap-native styles below.
+        if (window.Capacitor) document.documentElement.classList.add('cap-native');
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
      <!-- SEO Optimization -->
      <title>UPSC Prelims PYQs Practice | UPSC PYQS</title>
      <meta name="description" content="Practice previous years' questions (PYQs) for UPSC Prelims. Filter by subject, year, and difficulty to improve your preparation for the Civil Services Examination.">

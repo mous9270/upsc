@@ -418,6 +418,9 @@ const Pyqs: React.FC = () => {
     const currentQuestion = displayedQuestions.length > 0 ? displayedQuestions[currentIndex] : null;
     const isCurrentSubmitted = submittedIndices.has(currentIndex);
     const totalFilteredQuestions = displayedQuestions.length;
+    // AdMob BANNER (50dp) overlays the bottom of the WebView — add extra bottom
+    // padding so content stays visible above it. Only applies in the native app.
+    const isNative = !!(window as any).Capacitor;
 
     // --- Render Logic ---
     return (
@@ -570,8 +573,14 @@ const Pyqs: React.FC = () => {
                 className="container mx-auto px-3 sm:px-5 py-3 sm:py-5"
                 style={{
                     fontFamily: "'DM Sans', sans-serif",
-                    paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)',
-                    paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)',
+                    // On native: push title below the status bar inside the container
+                    // (not on body) so the gap colour matches the page background.
+                    // min/max clamps between 32 px (floor) and 52 px (ceil).
+                    paddingTop: isNative
+                        ? 'calc(min(max(env(safe-area-inset-top, 0px), 32px), 52px) + 0.5rem)'
+                        : '0.75rem',
+                    // Add 60 px extra on native to keep content above the AdMob banner
+                    paddingBottom: isNative ? 'calc(60px + 0.75rem)' : '0.75rem',
                 }}
             >
                 {/* ── Header ── */}

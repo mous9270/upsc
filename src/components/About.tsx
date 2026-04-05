@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 // import Navigation from './Navigation';
 
 const About: React.FC = () => {
+  const isNative = !!(window as any).Capacitor;
   return (
     <>
       {/* <Navigation /> */}
@@ -134,7 +135,15 @@ const About: React.FC = () => {
         className="min-h-screen"
         style={{ background: 'var(--paper)', fontFamily: "'DM Sans', sans-serif" }}
       >
-        <main className="container mx-auto px-3 sm:px-5 py-4 sm:py-6">
+        <main
+          className="container mx-auto px-3 sm:px-5 py-4 sm:py-6"
+          style={{
+            paddingTop: isNative
+              ? 'calc(min(max(env(safe-area-inset-top, 0px), 32px), 52px) + 0.5rem)'
+              : '1rem',
+            paddingBottom: '1rem',
+          }}
+        >
           <div style={{ maxWidth: '52rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
             {/* ── Page header ── */}

@@ -16,6 +16,14 @@ const App: React.FC = () => {
     localStorage.setItem('theme', dark ? 'dark' : 'light');
   }, [dark]);
 
+  // Backup: ensure cap-native is set even if the index.html inline script ran
+  // before window.Capacitor was injected by the Android WebView bridge.
+  useEffect(() => {
+    if ((window as any).Capacitor) {
+      document.documentElement.classList.add('cap-native');
+    }
+  }, []);
+
   return (
     <Router>
       {/* Dark / light mode toggle */}
@@ -25,7 +33,11 @@ const App: React.FC = () => {
         title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         style={{
           position: 'fixed',
-          top: '0.65rem',
+          // Place button just inside the top content area (same safe-area formula
+          // as the page containers: floor 32px, ceil 52px to avoid overshooting).
+          top: (window as any).Capacitor
+            ? 'calc(min(max(env(safe-area-inset-top, 0px), 32px), 52px) + 0.5rem)'
+            : 'calc(env(safe-area-inset-top, 0px) + 0.65rem)',
           right: '1rem',
           zIndex: 1000,
           width: '2.5rem',

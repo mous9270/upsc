@@ -51,9 +51,27 @@ html.dark {
     --red-lt:              #2B1515;
 }
 
+/* Fill the status-bar / home-indicator areas with the theme colour so the
+   transparent system bars don't show a white browser-default background. */
+html {
+    background: var(--paper);
+}
+
 body {
     background: var(--paper);
     color: var(--ink);
     font-family: 'DM Sans', sans-serif;
     transition: background 0.2s, color 0.2s;
+    /* Bottom safe-area for the system nav bar.
+       Top safe-area is handled inside each page container so the themed
+       background fills that gap rather than the html/body default white. */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Capacitor native: reliable safe-area overrides ────────────────────────
+   • min(max(env,32),52) → floor 32 px (covers all Android status bars),
+     ceil 52 px (prevents an oversized env() value from pushing content too far).
+   • Applied to sticky bars so they anchor below the status bar, not behind it. */
+.cap-native .sticky-bar {
+    top: min(max(env(safe-area-inset-top, 0px), 32px), 52px);
 }
