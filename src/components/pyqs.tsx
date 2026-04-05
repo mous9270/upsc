@@ -808,7 +808,7 @@ const Pyqs: React.FC = () => {
                                 Question {currentIndex + 1}
                                 <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--ink-muted)', marginLeft: '0.5rem' }}>of {totalFilteredQuestions}</span>
                             </h2>
-                            <span style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', background: 'var(--paper-alt)', padding: '0.18rem 0.6rem', borderRadius: '20px', border: '1px solid var(--border)' }}>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', background: 'var(--paper-alt)', padding: '0.18rem 0.6rem', borderRadius: '20px', border: '1px solid var(--border)', alignSelf: 'flex-start' }}>
                                 ID {currentQuestion.id} &nbsp;·&nbsp; {currentQuestion.paper ?? 'N/A'} {currentQuestion.year && `· ${currentQuestion.year}`}
                             </span>
                         </div>
