@@ -1,12 +1,18 @@
-# UPSC PYQs Application
+# UPSC PYQs Platform
 
-A React-based application for managing and studying UPSC (Union Public Service Commission) Previous Year Questions. This application helps aspirants organize and study questions effectively.
+A React + TypeScript application built and scaled solo to **35,000+ total users**, helping UPSC (Union Public Service Commission) aspirants practice previous year questions with a structured, searchable interface.
+
+## Scale & Impact
+- 35,000+ users
+- 200+ member Telegram study community
+- Mobile app launched on Android (via Capacitor)
+- Funded by user donations
 
 ## Features
 
 - Browse UPSC previous year questions
-- Add your own questions and explanations
-- Search and filter questions
+- Quiz mode with score tracking
+- Search and filter by paper, subject, topic, and year
 - Modern, responsive UI built with React and Tailwind CSS
 
 ## Installation
@@ -75,7 +81,8 @@ This project is built with:
 - React + TypeScript
 - Vite for fast development and building
 - Tailwind CSS for styling
-- PapaParse for CSV handling
+- PapaParse for CSV handling (all data is client-side, no backend/API)
+- Capacitor for the Android mobile app
 
 ### Available Scripts
 
